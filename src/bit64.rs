@@ -12,7 +12,7 @@ pub struct b64{
 impl b64{
     fn lower_mask(point: usize)->u64{
         if point>64{
-            panic!("Cannot create mask more than 64 bits")
+            panic!("Cannot create mask more than 64 bits for b64")
         } else {
             (1<<point) -1
         }

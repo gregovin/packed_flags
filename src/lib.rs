@@ -5,11 +5,13 @@ use std::fmt::Debug;
 use std::hash::Hash;
 mod bit64;
 mod bit32;
+mod bitsize;
 mod bit128;
 mod flag_iter;
 pub use crate::bit64::b64;
 pub use crate::bit32::b32;
 pub use crate::bit128::b128;
+pub use crate::bitsize::bsize;
 pub use crate::flag_iter::FlagIter;
 
 /// A trat that represents the functionality we want
