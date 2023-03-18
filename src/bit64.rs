@@ -23,8 +23,9 @@ impl b64{
     fn uper_mask(point:usize)->u64{
         if point>64{
             panic!("Cannot mask above the end of the list");
+        } else {
+            u64::MAX-(1<<point)+1
         }
-        u64::MAX-(1<<point)+1
     }
     pub fn new()->b64{
         b64::default()

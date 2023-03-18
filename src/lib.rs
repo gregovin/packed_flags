@@ -7,6 +7,7 @@ mod bit64;
 mod bit32;
 mod bitsize;
 mod bit128;
+mod bitlong;
 mod flag_iter;
 pub use crate::bit64::b64;
 pub use crate::bit32::b32;

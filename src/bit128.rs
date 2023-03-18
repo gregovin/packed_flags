@@ -23,8 +23,9 @@ impl b128{
     fn uper_mask(point:usize)->u128{
         if point>128{
             panic!("Cannot mask above the end of the list");
+        } else {
+            u128::MAX-(1<<point)+1
         }
-        u128::MAX-(1<<point)+1
     }
     pub fn new()->b128{
         b128::default()

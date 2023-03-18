@@ -23,8 +23,9 @@ impl b32{
     fn uper_mask(point:usize)->u32{
         if point>Self::MAX_LENGTH{
             panic!("Cannot mask above the end of the list");
+        }  else {
+            u32::MAX-(1<<point)+1
         }
-        u32::MAX-(1<<point)+1
     }
     pub fn new()->b32{
         b32::default()

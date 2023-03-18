@@ -4,7 +4,7 @@ use crate::{FlagLs, flag_iter::FlagIter};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
 #[allow(non_camel_case_types)]
-/// Up bitfields the size of a pointer
+/// a list of flags/bitfield up to the size of a pointer
 pub struct bsize{
     inner: usize,
     len: usize
@@ -23,9 +23,11 @@ impl bsize{
     fn uper_mask(point:usize)->usize{
         if point>Self::MAX_LENGTH{
             panic!("Cannot mask above the end of the list");
+        } else {
+            usize::MAX-(1<<point)+1
         }
-        usize::MAX-(1<<point)+1
     }
+    /// Create a new blank empty list of flags
     pub fn new()->bsize{
         bsize::default()
     }
