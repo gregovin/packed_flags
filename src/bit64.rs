@@ -1,6 +1,6 @@
 use std::ops::{Index, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, Not};
 
-use crate::{FlagLs, flag_iter};
+use crate::{FlagLs, flag_iter, B32,B128,Bsize,Blong};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
 /// A list of flags up to 64 flags long, or a 64 bit bitfield
@@ -17,6 +17,10 @@ impl B64{
         }
     }
     fn inner(&self)->u64{
+        self.inner
+    }
+    /// Converts the bitfield into its inner representation, a u64, consuming it
+    pub fn as_inner(self)->u64{
         self.inner
     }
     fn uper_mask(point:usize)->u64{

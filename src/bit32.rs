@@ -19,6 +19,10 @@ impl B32{
     fn inner(&self)->u32{
         self.inner
     }
+    /// Converts the bitfield into its inner representation, a u32, consuming it
+    pub fn as_inner(self)->u32{
+        self.inner
+    }
     fn uper_mask(point:usize)->u32{
         if point>32{
             panic!("Cannot mask above the end of the list");

@@ -1,6 +1,6 @@
 use std::ops::{Index, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, Not};
 
-use crate::{FlagLs, flag_iter};
+use crate::{FlagLs, flag_iter, B32, B64, B128, Blong};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
 /// a list of flags/bitfield up to the size of a pointer
@@ -17,6 +17,10 @@ impl Bsize{
         }
     }
     fn inner(&self)->usize{
+        self.inner
+    }
+    /// Converts the bitfield into its inner representation, a usize, consuming it
+    pub fn as_inner(self)->usize{
         self.inner
     }
     fn uper_mask(point:usize)->usize{

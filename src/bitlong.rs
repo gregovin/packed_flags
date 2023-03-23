@@ -1,6 +1,6 @@
 use std::ops::{Index, BitAndAssign, BitOrAssign, BitXorAssign, Not, SubAssign};
 
-use crate::{FlagLs, flag_iter};
+use crate::{FlagLs, flag_iter, B32, Bsize, B64, B128};
 /// An arbitrarily long list of flags
 /// 
 /// You should use b32,b64, or b128 instead unless you really need a lot of flags
@@ -20,6 +20,10 @@ impl Blong{
     }
     fn inner(&self)->&Vec<usize>{
         &self.inner
+    }
+    /// Converts the bitfield into its inner representation, a list of integers, consuming it
+    pub fn as_inner(self)->Vec<usize>{
+        self.inner
     }
     fn uper_mask(inner_point: usize)->usize{
         if inner_point>Self::INNER_SIZE{
