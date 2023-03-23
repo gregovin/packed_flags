@@ -1,6 +1,6 @@
 use std::ops::{Index, BitAndAssign, BitOrAssign, BitXorAssign, Not, SubAssign};
 
-use crate::{FlagLs, flag_iter::FlagIter};
+use crate::{FlagLs, flag_iter};
 /// An arbitrarily long list of flags
 /// 
 /// You should use b32,b64, or b128 instead unless you really need a lot of flags
@@ -146,8 +146,8 @@ impl FlagLs for Blong{
         }
     }
 
-    fn iter(&self)->FlagIter<Self> {
-        FlagIter::new(self)
+    fn iter(&self)->flag_iter::Iter<Self> {
+        flag_iter::Iter::new(self)
     }
 }
 impl BitAndAssign<&Blong> for Blong{

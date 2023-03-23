@@ -1,6 +1,6 @@
 use std::ops::{Index, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, Not};
 
-use crate::{FlagLs, flag_iter::FlagIter};
+use crate::{FlagLs, flag_iter};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
 /// A list of flags up to 64 flags long, or a 64 bit bitfield
@@ -106,8 +106,8 @@ impl FlagLs for B64{
         }
     }
 
-    fn iter(&self)->FlagIter<B64> {
-        FlagIter::new(self)
+    fn iter(&self)->flag_iter::Iter<B64> {
+        flag_iter::Iter::new(self)
     }
 
 

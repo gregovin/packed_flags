@@ -1,6 +1,6 @@
 use std::ops::{Index, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, Not};
 
-use crate::{FlagLs, flag_iter::FlagIter};
+use crate::{FlagLs, flag_iter};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
 /// a list of flags/bitfield up to the size of a pointer
@@ -107,8 +107,8 @@ impl FlagLs for Bsize{
         }
     }
 
-    fn iter(&self)->FlagIter<Bsize> {
-        FlagIter::new(self)
+    fn iter(&self)->flag_iter::Iter<Bsize> {
+        flag_iter::Iter::new(self)
     }
 
 

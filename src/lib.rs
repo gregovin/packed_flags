@@ -8,13 +8,12 @@ mod bit32;
 mod bitsize;
 mod bit128;
 mod bitlong;
-mod flag_iter;
+pub mod flag_iter;
 pub use crate::bit64::B64;
 pub use crate::bit32::B32;
 pub use crate::bit128::B128;
 pub use crate::bitsize::Bsize;
 pub use crate::bitlong::Blong;
-pub use crate::flag_iter::FlagIter;
 
 /// A trait that represents a list of flags.
 /// 
@@ -188,7 +187,7 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// assert_eq!(itr.next(),Some(true));
     /// assert_eq!(itr.next(),None);
     /// ```
-    fn iter(&self)->FlagIter<Self>;
+    fn iter(&self)->flag_iter::Iter<Self>;
     /// build a compact list of flags from a vector of flags
     /// # Panics
     /// Panics when v.len()>MAX_LENGTH

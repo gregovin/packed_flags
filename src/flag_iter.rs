@@ -1,18 +1,18 @@
 use crate::FlagLs;
-/// An iterator for iterating over lists of flags
-pub struct FlagIter<'a,T: FlagLs>{
+/// An Iterator for Iterating over lists of flags
+pub struct Iter<'a,T: FlagLs>{
     inner: &'a T,
     pos: usize
 }
-impl<T> FlagIter<'_,T>
+impl<T> Iter<'_,T>
 where T:FlagLs
 {
-    /// Create a new iterator referencing a flag list
-    pub fn new(ls: &T)->FlagIter<T>{
-        FlagIter { inner: ls, pos: 0 }
+    /// Create a new Iterator referencing a flag list
+    pub fn new(ls: &T)->Iter<T>{
+        Iter { inner: ls, pos: 0 }
     }
 }
-impl<T> Iterator for FlagIter<'_,T>
+impl<T> Iterator for Iter<'_,T>
 where T:FlagLs
 {
     type Item=bool;
