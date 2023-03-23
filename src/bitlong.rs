@@ -5,16 +5,15 @@ use crate::{FlagLs, flag_iter::FlagIter};
 /// 
 /// You should use b32,b64, or b128 instead unless you really need a lot of flags
 #[derive(PartialEq,Eq,Default,Clone, Debug,Hash)]
-#[allow(non_camel_case_types)]
-pub struct blong{
+pub struct Blong{
     inner: Vec<usize>,
     len: usize
 }
-impl blong{
+impl Blong{
     const INNER_SIZE: usize=usize::BITS as usize;
     fn lower_mask(inner_point: usize)->usize{
         if inner_point>Self::INNER_SIZE{
-            panic!("Cannot mask more than pointer size for blong")
+            panic!("Cannot mask more than pointer size for Blong")
         } else {
             (1<<inner_point)-1
         }
@@ -31,11 +30,11 @@ impl blong{
     }
     #[allow(dead_code)]
     /// Creates an empty list of flags
-    pub fn new()->blong{
-        blong { inner: vec![], len: 0 }
+    pub fn new()->Blong{
+        Blong { inner: vec![], len: 0 }
     }
 }
-impl Index<usize> for blong{
+impl Index<usize> for Blong{
     type Output = bool;
     fn index(&self, index: usize) -> &Self::Output {
         if index>self.len{
@@ -50,7 +49,7 @@ impl Index<usize> for blong{
         }
     }
 }
-impl FlagLs for blong{
+impl FlagLs for Blong{
     const MAX_LENGTH: usize=usize::MAX;
 
     fn len(&self)->usize {
@@ -131,12 +130,9 @@ impl FlagLs for blong{
         self.len=0;
     }
 
-    fn get(&self, index: usize)->Option<bool> {
-        if index>=self.len{
-            None
-        } else {
-            Some(self[index])
-        }
+    unsafe fn get_unchecked(&self, index: usize)->bool {
+        let (t_index,m_index)=(index/Self::INNER_SIZE,index%Self::INNER_SIZE);
+        (self.inner.get_unchecked(t_index)>>m_index) & 1==1
     }
 
     fn set(&mut self,index:usize,flag:bool) {
@@ -154,8 +150,8 @@ impl FlagLs for blong{
         FlagIter::new(self)
     }
 }
-impl BitAndAssign<&blong> for blong{
-    fn bitand_assign(&mut self, rhs: &blong) {
+impl BitAndAssign<&Blong> for Blong{
+    fn bitand_assign(&mut self, rhs: &Blong) {
         for i in 0..self.inner.len().min(rhs.inner().len()){
                 self.inner[i].bitand_assign(rhs.inner()[i]);
         }
@@ -168,8 +164,8 @@ impl BitAndAssign<&blong> for blong{
         self.len=self.len.max(rhs.len());
     }
 }
-impl BitOrAssign<&blong> for blong{
-    fn bitor_assign(&mut self, rhs: &blong) {
+impl BitOrAssign<&Blong> for Blong{
+    fn bitor_assign(&mut self, rhs: &Blong) {
         for i in 0..self.inner.len().min(rhs.inner().len()){
             self.inner[i].bitor_assign(rhs.inner()[i]);
         }
@@ -179,8 +175,8 @@ impl BitOrAssign<&blong> for blong{
         self.len=self.len.max(rhs.len());
     }
 }
-impl BitXorAssign<&blong> for blong{
-    fn bitxor_assign(&mut self, rhs: &blong) {
+impl BitXorAssign<&Blong> for Blong{
+    fn bitxor_assign(&mut self, rhs: &Blong) {
         for i in 0..self.inner.len().min(rhs.inner().len()){
             self.inner[i].bitand_assign(rhs.inner()[i]);
         }
@@ -190,8 +186,8 @@ impl BitXorAssign<&blong> for blong{
         self.len=self.len.max(rhs.len());
     }
 }
-impl Not for blong{
-    type Output = blong;
+impl Not for Blong{
+    type Output = Blong;
     fn not(mut self) -> Self::Output {
         let len = self.inner.len();
         for i in 0.. len{
@@ -201,9 +197,9 @@ impl Not for blong{
         self
     }
 }
-impl SubAssign<&blong> for blong{
+impl SubAssign<&Blong> for Blong{
     /// Subtration is set difference
-    fn sub_assign(&mut self, rhs: &blong) {
+    fn sub_assign(&mut self, rhs: &Blong) {
         for i in 0..self.inner.len(){
             self.inner[i] &= !rhs.inner()[i];
         }

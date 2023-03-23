@@ -3,16 +3,15 @@ use std::ops::{Index, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAs
 use crate::{FlagLs, flag_iter::FlagIter};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
-#[allow(non_camel_case_types)]
 /// a list of flags/bitfield up to the size of a pointer
-pub struct bsize{
+pub struct Bsize{
     inner: usize,
     len: usize
 }
-impl bsize{
+impl Bsize{
     fn lower_mask(point: usize)->usize{
         if point>Self::MAX_LENGTH{
-            panic!("Cannot create mask more than {} bits for bsize",bsize::MAX_LENGTH)
+            panic!("Cannot create mask more than {} bits for Bsize",Bsize::MAX_LENGTH)
         } else {
             (1<<point) -1
         }
@@ -28,14 +27,14 @@ impl bsize{
         }
     }
     /// Create a new blank empty list of flags
-    pub fn new()->bsize{
-        bsize::default()
+    pub fn new()->Bsize{
+        Bsize::default()
     }
-    fn init(inner:usize,len:usize)->bsize{
-        bsize{inner,len}
+    fn init(inner:usize,len:usize)->Bsize{
+        Bsize{inner,len}
     }
 }
-impl Index<usize> for bsize{
+impl Index<usize> for Bsize{
     type Output = bool;
     fn index(&self, index: usize) -> &Self::Output {
         if index>self.len{
@@ -48,7 +47,7 @@ impl Index<usize> for bsize{
         }
     }
 }
-impl FlagLs for bsize{
+impl FlagLs for Bsize{
     const MAX_LENGTH: usize=usize::BITS as usize;
 
     fn len(&self)->usize {
@@ -57,7 +56,7 @@ impl FlagLs for bsize{
 
     fn set_len(&mut self, new_len:usize){
         if new_len>Self::MAX_LENGTH{
-            panic!("Cannot set length to a length larger than {} for bsize",Self::MAX_LENGTH)
+            panic!("Cannot set length to a length larger than {} for Bsize",Self::MAX_LENGTH)
         }
         self.len=new_len;
         self.inner &= (1<<new_len) -1;
@@ -94,12 +93,8 @@ impl FlagLs for bsize{
         self.len=0;
     }
 
-    fn get(&self, index: usize)->Option<bool> {
-        if index<self.len(){
-            Some(self[index])
-        } else {
-            None
-        }
+    unsafe fn get_unchecked(&self, index: usize)->bool {
+        (self.inner>>index) & 1==1
     }
 
     fn set(&mut self,index:usize,flag:bool) {
@@ -112,74 +107,74 @@ impl FlagLs for bsize{
         }
     }
 
-    fn iter(&self)->FlagIter<bsize> {
+    fn iter(&self)->FlagIter<Bsize> {
         FlagIter::new(self)
     }
 
 
 }
-impl BitAnd<bsize> for bsize{
-    type Output=bsize;
+impl BitAnd<Bsize> for Bsize{
+    type Output=Bsize;
 
-    fn bitand(self, rhs: bsize) -> Self::Output {
-        bsize::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
+    fn bitand(self, rhs: Bsize) -> Self::Output {
+        Bsize::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitAndAssign<bsize> for bsize{
-    fn bitand_assign(&mut self, rhs: bsize) {
+impl BitAndAssign<Bsize> for Bsize{
+    fn bitand_assign(&mut self, rhs: Bsize) {
         self.inner&=rhs.inner();
         self.len=self.len.max(rhs.len());
     }
 }
-impl BitOr<bsize> for bsize{
-    type Output=bsize;
-    fn bitor(self, rhs: bsize) -> Self::Output {
-        bsize::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
+impl BitOr<Bsize> for Bsize{
+    type Output=Bsize;
+    fn bitor(self, rhs: Bsize) -> Self::Output {
+        Bsize::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitOrAssign<bsize> for bsize{
-    fn bitor_assign(&mut self, rhs: bsize) {
+impl BitOrAssign<Bsize> for Bsize{
+    fn bitor_assign(&mut self, rhs: Bsize) {
         self.inner|=rhs.inner();
         self.len=self.len.max(rhs.len());
     }
 }
-impl BitXor<bsize> for bsize{
-    type Output = bsize;
-    fn bitxor(self, rhs: bsize) -> Self::Output {
-        bsize::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
+impl BitXor<Bsize> for Bsize{
+    type Output = Bsize;
+    fn bitxor(self, rhs: Bsize) -> Self::Output {
+        Bsize::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
     }
 }
-impl BitXorAssign<bsize> for bsize{
-    fn bitxor_assign(&mut self, rhs: bsize) {
+impl BitXorAssign<Bsize> for Bsize{
+    fn bitxor_assign(&mut self, rhs: Bsize) {
         self.inner.bitxor_assign(rhs.inner());
         self.len=self.len.max(rhs.len());
     }
 }
-impl Shl<usize> for bsize{
-    type Output = bsize;
+impl Shl<usize> for Bsize{
+    type Output = Bsize;
     fn shl(self, rhs: usize) -> Self::Output {
-        bsize::init(self.inner<<rhs, (self.len+rhs).min(Self::MAX_LENGTH))
+        Bsize::init(self.inner<<rhs, (self.len+rhs).min(Self::MAX_LENGTH))
     }
 }
 #[allow(clippy::suspicious_op_assign_impl)] 
-impl ShlAssign<usize> for bsize{
+impl ShlAssign<usize> for Bsize{
     fn shl_assign(&mut self, rhs: usize) {
         self.inner.shl_assign(rhs);
         self.len=(self.len+rhs).min(Self::MAX_LENGTH);
     }
 }
-impl Shr<usize> for bsize{
-    type Output = bsize;
+impl Shr<usize> for Bsize{
+    type Output = Bsize;
     fn shr(self, rhs: usize) -> Self::Output {
         let new_len=if self.len>rhs{
             self.len-rhs
         } else {
             0
         };
-        bsize::init(self.inner>>rhs, new_len)
+        Bsize::init(self.inner>>rhs, new_len)
     }
 }
-impl ShrAssign<usize> for bsize{
+impl ShrAssign<usize> for Bsize{
     fn shr_assign(&mut self, rhs: usize) {
         self.inner.shr_assign(rhs);
         self.len = if self.len>rhs{
@@ -189,16 +184,16 @@ impl ShrAssign<usize> for bsize{
         };
     }
 }
-impl Not for bsize{
-    type Output = bsize;
+impl Not for Bsize{
+    type Output = Bsize;
     fn not(self) -> Self::Output {
-        bsize::init((!self.inner)&Self::lower_mask(self.len) , self.len)
+        Bsize::init((!self.inner)&Self::lower_mask(self.len) , self.len)
     }
 }
-impl Sub<bsize> for bsize{
-    type Output = bsize;
+impl Sub<Bsize> for Bsize{
+    type Output = Bsize;
     ///note subtraction is set difference
-    fn sub(self, rhs: bsize) -> Self::Output {
-        bsize::init(self.inner & (!rhs.inner), self.len)
+    fn sub(self, rhs: Bsize) -> Self::Output {
+        Bsize::init(self.inner & (!rhs.inner), self.len)
     }
 }

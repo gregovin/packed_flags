@@ -9,11 +9,11 @@ mod bitsize;
 mod bit128;
 mod bitlong;
 mod flag_iter;
-pub use crate::bit64::b64;
-pub use crate::bit32::b32;
-pub use crate::bit128::b128;
-pub use crate::bitsize::bsize;
-pub use crate::bitlong::blong;
+pub use crate::bit64::B64;
+pub use crate::bit32::B32;
+pub use crate::bit128::B128;
+pub use crate::bitsize::Bsize;
+pub use crate::bitlong::Blong;
 pub use crate::flag_iter::FlagIter;
 
 /// A trait that represents a list of flags.
@@ -25,10 +25,10 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Returns number of flags in the flags list
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let flag_ls=b64::from_vec(vec![true,false,false]);
+    /// let flag_ls=B64::from_vec(vec![true,false,false]);
     /// assert_eq!(flag_ls.len(),3);
     /// ```
     fn len(&self)->usize;
@@ -41,14 +41,14 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Panics if the index is out of bounds or the new element would make the list longer than MAX_LENGTH
     /// # Examples  
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let mut flag_ls=b64::default();
+    /// let mut flag_ls=B64::default();
     /// flag_ls.insert(0,true);
     /// flag_ls.insert(0,false);
     /// flag_ls.insert(2,false);
-    /// assert_eq!(flag_ls,b64::from_vec(vec![false,true,false]));
+    /// assert_eq!(flag_ls,B64::from_vec(vec![false,true,false]));
     /// ```
     fn insert(&mut self,index: usize,flag:bool);
     /// Removes the flag at the position given by index, and returns it
@@ -56,23 +56,23 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Panics if the index is out of bounds
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let mut flag_ls=b64::from_vec(vec![false,true,false]);
+    /// let mut flag_ls=B64::from_vec(vec![false,true,false]);
     /// assert!(flag_ls.remove(1));
-    /// assert_eq!(flag_ls,b64::from_vec(vec![false,false]));
+    /// assert_eq!(flag_ls,B64::from_vec(vec![false,false]));
     /// ```
     fn remove(&mut self,index: usize)->bool;
     /// Clears the list, setting the internal state and length to 0
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let mut flag_ls=b64::from_vec(vec![false,true,false]);
+    /// let mut flag_ls=B64::from_vec(vec![false,true,false]);
     /// flag_ls.clear();
-    /// assert_eq!(flag_ls,b64::default());
+    /// assert_eq!(flag_ls,B64::default());
     /// flag_ls.set_len(1);
     /// assert_eq!(flag_ls[0],false);
     /// ```
@@ -89,14 +89,14 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Panics if the resulting list is too big
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let mut flag_ls=b64::default();
+    /// let mut flag_ls=B64::default();
     /// flag_ls.push(false);
     /// flag_ls.push(true);
     /// flag_ls.push(false);
-    /// assert_eq!(flag_ls,b64::from_vec(vec![false,true,false]));
+    /// assert_eq!(flag_ls,B64::from_vec(vec![false,true,false]));
     /// ```
     fn push(&mut self,flag:bool){
         self.insert(self.len(),flag);
@@ -104,10 +104,10 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// removes and returns the last flag, or none if the list is empty
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let mut flag_ls=b64::from_vec(vec![false,true]);
+    /// let mut flag_ls=B64::from_vec(vec![false,true]);
     /// assert_eq!(flag_ls.pop(),Some(true));
     /// assert_eq!(flag_ls.pop(),Some(false));
     /// assert_eq!(flag_ls.pop(),None);
@@ -119,39 +119,51 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
             None
         }
     }
+    /// Returns the element at index without performing bounds checking
+    /// # Safety
+    /// Calling this function with an out of bounds index may result in undefined behavior, or unpredictible/garbage outputs
+    unsafe fn get_unchecked(&self,index:usize)->bool;
     /// Get the flag at a specified index, if it exists, otherwise returns None
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let flag_ls=b64::from_vec(vec![false,true]);
+    /// let flag_ls=B64::from_vec(vec![false,true]);
     /// assert_eq!(flag_ls.get(1),Some(true));
     /// assert_eq!(flag_ls.get(2),None);
     /// ```
-    fn get(&self, index: usize)->Option<bool>;
+    fn get(&self, index: usize)->Option<bool>{
+        if index<self.len(){
+            unsafe{
+                Some(self.get_unchecked(index))
+            }
+        } else {
+            None
+        }
+    }
     /// Set the flag at a specified index
     /// # Panics
     /// If the index is out of bounds
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let mut flag_ls=b64::from_vec(vec![false,true,false]);
+    /// let mut flag_ls=B64::from_vec(vec![false,true,false]);
     /// flag_ls.set(2,true);
-    /// assert_eq!(flag_ls,b64::from_vec(vec![false,true,true]));
+    /// assert_eq!(flag_ls,B64::from_vec(vec![false,true,true]));
     /// ```
     fn set(&mut self,index:usize,flag:bool);
     /// Sets the flag at the specified index, returning the flag that was there if the index is in bounds
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let mut flag_ls=b64::from_vec(vec![false,true,false]);
+    /// let mut flag_ls=B64::from_vec(vec![false,true,false]);
     /// assert_eq!(flag_ls.try_set(2,true),Some(false));
-    /// assert_eq!(flag_ls,b64::from_vec(vec![false,true,true]));
+    /// assert_eq!(flag_ls,B64::from_vec(vec![false,true,true]));
     /// assert_eq!(flag_ls.try_set(3,false),None);
     /// ```
     fn try_set(&mut self,index: usize,flag:bool)->Option<bool>{
@@ -165,10 +177,10 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// get an iterator over all flags in the list
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let flag_ls=b64::from_vec(vec![false,true]);
+    /// let flag_ls=B64::from_vec(vec![false,true]);
     /// let mut itr=flag_ls.iter();
     /// assert_eq!(itr.next(),Some(false));
     /// assert_eq!(itr.next(),Some(true));
@@ -180,10 +192,10 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Panics when v.len()>MAX_LENGTH
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let flag_ls=b64::from_vec(vec![false,true]);
+    /// let flag_ls=B64::from_vec(vec![false,true]);
     /// assert_eq!(flag_ls.len(),2);
     /// assert_eq!(flag_ls.get(0),Some(false));
     /// assert_eq!(flag_ls.get(1),Some(true));
@@ -204,10 +216,10 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Panics when len>MAX_LENGTH
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let flag_ls=b64::all_true(10);
+    /// let flag_ls=B64::all_true(10);
     /// for flag in flag_ls.iter(){
     ///     assert!(flag);
     /// }
@@ -224,10 +236,10 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Panics when len>MAX_LENGTH
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let flag_ls=b64::all_false(10);
+    /// let flag_ls=B64::all_false(10);
     /// for flag in flag_ls.iter(){
     ///     assert!(!flag);
     /// }
@@ -242,11 +254,11 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
     /// Returns true when there are no flags in the list
     /// # Examples
     /// ```
-    /// use packed_flags::b64;
+    /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     /// 
-    /// let l1=b64::default();
-    /// let l2=b64::all_true(1);
+    /// let l1=B64::default();
+    /// let l2=B64::all_true(1);
     /// 
     /// assert!(l1.is_empty());
     /// assert!(!l2.is_empty());
@@ -261,10 +273,10 @@ mod tests {
     use super::*;
     #[test]
     fn len(){
-        let flag_ls1=b32::from_vec(vec![true,false,false]);
-        let flag_ls2=b128::from_vec(vec![true,false,false]);
-        let flag_ls3=bsize::from_vec(vec![true,false,false]);
-        let flag_ls4=blong::from_vec(vec![true,false,false]);
+        let flag_ls1=B32::from_vec(vec![true,false,false]);
+        let flag_ls2=B128::from_vec(vec![true,false,false]);
+        let flag_ls3=Bsize::from_vec(vec![true,false,false]);
+        let flag_ls4=Blong::from_vec(vec![true,false,false]);
         assert_eq!(flag_ls1.len(),3);
         assert_eq!(flag_ls2.len(),3);
         assert_eq!(flag_ls3.len(),3);
@@ -272,201 +284,201 @@ mod tests {
     }
     #[test]
     fn insert(){
-        let mut flag_ls1=b32::default();
+        let mut flag_ls1=B32::default();
         flag_ls1.insert(0,true);
         flag_ls1.insert(0,false);
         flag_ls1.insert(2,false);
-        assert_eq!(flag_ls1,b32::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls1,B32::from_vec(vec![false,true,false]));
 
-        let mut flag_ls2=b128::default();
+        let mut flag_ls2=B128::default();
         flag_ls2.insert(0,true);
         flag_ls2.insert(0,false);
         flag_ls2.insert(2,false);
-        assert_eq!(flag_ls2,b128::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls2,B128::from_vec(vec![false,true,false]));
 
-        let mut flag_ls3=bsize::default();
+        let mut flag_ls3=Bsize::default();
         flag_ls3.insert(0,true);
         flag_ls3.insert(0,false);
         flag_ls3.insert(2,false);
-        assert_eq!(flag_ls3,bsize::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls3,Bsize::from_vec(vec![false,true,false]));
 
-        let mut flag_ls4=blong::default();
+        let mut flag_ls4=Blong::default();
         flag_ls4.insert(0,true);
         flag_ls4.insert(0,false);
         flag_ls4.insert(2,false);
-        assert_eq!(flag_ls4,blong::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls4,Blong::from_vec(vec![false,true,false]));
     }
     #[test]
     fn remove(){
-        let mut flag_ls=b32::from_vec(vec![false,true,false]);
+        let mut flag_ls=B32::from_vec(vec![false,true,false]);
         assert!(flag_ls.remove(1));
-        assert_eq!(flag_ls,b32::from_vec(vec![false,false]));
+        assert_eq!(flag_ls,B32::from_vec(vec![false,false]));
 
-        let mut flag_ls=b128::from_vec(vec![false,true,false]);
+        let mut flag_ls=B128::from_vec(vec![false,true,false]);
         assert!(flag_ls.remove(1));
-        assert_eq!(flag_ls,b128::from_vec(vec![false,false]));
+        assert_eq!(flag_ls,B128::from_vec(vec![false,false]));
 
-        let mut flag_ls=bsize::from_vec(vec![false,true,false]);
+        let mut flag_ls=Bsize::from_vec(vec![false,true,false]);
         assert!(flag_ls.remove(1));
-        assert_eq!(flag_ls,bsize::from_vec(vec![false,false]));
+        assert_eq!(flag_ls,Bsize::from_vec(vec![false,false]));
 
-        let mut flag_ls=blong::from_vec(vec![false,true,false]);
+        let mut flag_ls=Blong::from_vec(vec![false,true,false]);
         assert!(flag_ls.remove(1));
-        assert_eq!(flag_ls,blong::from_vec(vec![false,false]));
+        assert_eq!(flag_ls,Blong::from_vec(vec![false,false]));
     }
     #[test]
     fn clear(){
-        let mut flag_ls=b32::from_vec(vec![false,true,false]);
+        let mut flag_ls=B32::from_vec(vec![false,true,false]);
         flag_ls.clear();
-        assert_eq!(flag_ls,b32::default());
+        assert_eq!(flag_ls,B32::default());
         flag_ls.set_len(1);
         assert_eq!(flag_ls[0],false);
 
-        let mut flag_ls=b128::from_vec(vec![false,true,false]);
+        let mut flag_ls=B128::from_vec(vec![false,true,false]);
         flag_ls.clear();
-        assert_eq!(flag_ls,b128::default());
+        assert_eq!(flag_ls,B128::default());
         flag_ls.set_len(1);
         assert_eq!(flag_ls[0],false);
 
-        let mut flag_ls=bsize::from_vec(vec![false,true,false]);
+        let mut flag_ls=Bsize::from_vec(vec![false,true,false]);
         flag_ls.clear();
-        assert_eq!(flag_ls,bsize::default());
+        assert_eq!(flag_ls,Bsize::default());
         flag_ls.set_len(1);
         assert_eq!(flag_ls[0],false);
 
-        let mut flag_ls=blong::from_vec(vec![false,true,false]);
+        let mut flag_ls=Blong::from_vec(vec![false,true,false]);
         flag_ls.clear();
-        assert_eq!(flag_ls,blong::default());
+        assert_eq!(flag_ls,Blong::default());
         flag_ls.set_len(1);
         assert_eq!(flag_ls[0],false);
     }
     #[test]
     fn push(){
-        let mut flag_ls=b32::default();
+        let mut flag_ls=B32::default();
         flag_ls.push(false);
         flag_ls.push(true);
         flag_ls.push(false);
-        assert_eq!(flag_ls,b32::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls,B32::from_vec(vec![false,true,false]));
 
-        let mut flag_ls=b128::default();
+        let mut flag_ls=B128::default();
         flag_ls.push(false);
         flag_ls.push(true);
         flag_ls.push(false);
-        assert_eq!(flag_ls,b128::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls,B128::from_vec(vec![false,true,false]));
 
-        let mut flag_ls=bsize::default();
+        let mut flag_ls=Bsize::default();
         flag_ls.push(false);
         flag_ls.push(true);
         flag_ls.push(false);
-        assert_eq!(flag_ls,bsize::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls,Bsize::from_vec(vec![false,true,false]));
 
-        let mut flag_ls=blong::default();
+        let mut flag_ls=Blong::default();
         flag_ls.push(false);
         flag_ls.push(true);
         flag_ls.push(false);
-        assert_eq!(flag_ls,blong::from_vec(vec![false,true,false]));
+        assert_eq!(flag_ls,Blong::from_vec(vec![false,true,false]));
     }
     #[test]
     fn pop(){
-        let mut flag_ls=b32::from_vec(vec![false,true]);
+        let mut flag_ls=B32::from_vec(vec![false,true]);
         assert_eq!(flag_ls.pop(),Some(true));
         assert_eq!(flag_ls.pop(),Some(false));
         assert_eq!(flag_ls.pop(),None);
 
-        let mut flag_ls=b128::from_vec(vec![false,true]);
+        let mut flag_ls=B128::from_vec(vec![false,true]);
         assert_eq!(flag_ls.pop(),Some(true));
         assert_eq!(flag_ls.pop(),Some(false));
         assert_eq!(flag_ls.pop(),None);
 
-        let mut flag_ls=bsize::from_vec(vec![false,true]);
+        let mut flag_ls=Bsize::from_vec(vec![false,true]);
         assert_eq!(flag_ls.pop(),Some(true));
         assert_eq!(flag_ls.pop(),Some(false));
         assert_eq!(flag_ls.pop(),None);
 
-        let mut flag_ls=blong::from_vec(vec![false,true]);
+        let mut flag_ls=Blong::from_vec(vec![false,true]);
         assert_eq!(flag_ls.pop(),Some(true));
         assert_eq!(flag_ls.pop(),Some(false));
         assert_eq!(flag_ls.pop(),None);
     }
     #[test]
     fn get(){
-        let flag_ls=b32::from_vec(vec![false,true]);
+        let flag_ls=B32::from_vec(vec![false,true]);
         assert_eq!(flag_ls.get(1),Some(true));
         assert_eq!(flag_ls.get(2),None);
 
-        let flag_ls=b128::from_vec(vec![false,true]);
+        let flag_ls=B128::from_vec(vec![false,true]);
         assert_eq!(flag_ls.get(1),Some(true));
         assert_eq!(flag_ls.get(2),None);
 
-        let flag_ls=bsize::from_vec(vec![false,true]);
+        let flag_ls=Bsize::from_vec(vec![false,true]);
         assert_eq!(flag_ls.get(1),Some(true));
         assert_eq!(flag_ls.get(2),None);
 
-        let flag_ls=blong::from_vec(vec![false,true]);
+        let flag_ls=Blong::from_vec(vec![false,true]);
         assert_eq!(flag_ls.get(1),Some(true));
         assert_eq!(flag_ls.get(2),None);
     }
     #[test]
     fn set(){
-        let mut flag_ls=b32::from_vec(vec![false,true,false]);
+        let mut flag_ls=B32::from_vec(vec![false,true,false]);
         flag_ls.set(2,true);
-        assert_eq!(flag_ls,b32::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,B32::from_vec(vec![false,true,true]));
 
-        let mut flag_ls=b128::from_vec(vec![false,true,false]);
+        let mut flag_ls=B128::from_vec(vec![false,true,false]);
         flag_ls.set(2,true);
-        assert_eq!(flag_ls,b128::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,B128::from_vec(vec![false,true,true]));
 
-        let mut flag_ls=bsize::from_vec(vec![false,true,false]);
+        let mut flag_ls=Bsize::from_vec(vec![false,true,false]);
         flag_ls.set(2,true);
-        assert_eq!(flag_ls,bsize::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,Bsize::from_vec(vec![false,true,true]));
 
-        let mut flag_ls=blong::from_vec(vec![false,true,false]);
+        let mut flag_ls=Blong::from_vec(vec![false,true,false]);
         flag_ls.set(2,true);
-        assert_eq!(flag_ls,blong::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,Blong::from_vec(vec![false,true,true]));
     }
     #[test]
     fn try_set(){
-        let mut flag_ls=b32::from_vec(vec![false,true,false]);
+        let mut flag_ls=B32::from_vec(vec![false,true,false]);
         assert_eq!(flag_ls.try_set(2,true),Some(false));
-        assert_eq!(flag_ls,b32::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,B32::from_vec(vec![false,true,true]));
         assert_eq!(flag_ls.try_set(3,false),None);
 
-        let mut flag_ls=b128::from_vec(vec![false,true,false]);
+        let mut flag_ls=B128::from_vec(vec![false,true,false]);
         assert_eq!(flag_ls.try_set(2,true),Some(false));
-        assert_eq!(flag_ls,b128::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,B128::from_vec(vec![false,true,true]));
         assert_eq!(flag_ls.try_set(3,false),None);
 
-        let mut flag_ls=bsize::from_vec(vec![false,true,false]);
+        let mut flag_ls=Bsize::from_vec(vec![false,true,false]);
         assert_eq!(flag_ls.try_set(2,true),Some(false));
-        assert_eq!(flag_ls,bsize::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,Bsize::from_vec(vec![false,true,true]));
         assert_eq!(flag_ls.try_set(3,false),None);
 
-        let mut flag_ls=blong::from_vec(vec![false,true,false]);
+        let mut flag_ls=Blong::from_vec(vec![false,true,false]);
         assert_eq!(flag_ls.try_set(2,true),Some(false));
-        assert_eq!(flag_ls,blong::from_vec(vec![false,true,true]));
+        assert_eq!(flag_ls,Blong::from_vec(vec![false,true,true]));
         assert_eq!(flag_ls.try_set(3,false),None);
     }
     #[test]
     fn iter(){
-        let flag_ls=b32::from_vec(vec![false,true]);
+        let flag_ls=B32::from_vec(vec![false,true]);
         let mut itr=flag_ls.iter();
         assert_eq!(itr.next(),Some(false));
         assert_eq!(itr.next(),Some(true));
         assert_eq!(itr.next(),None);
 
-        let flag_ls=b128::from_vec(vec![false,true]);
+        let flag_ls=B128::from_vec(vec![false,true]);
         let mut itr=flag_ls.iter();
         assert_eq!(itr.next(),Some(false));
         assert_eq!(itr.next(),Some(true));
         assert_eq!(itr.next(),None);
 
-        let flag_ls=bsize::from_vec(vec![false,true]);
+        let flag_ls=Bsize::from_vec(vec![false,true]);
         let mut itr=flag_ls.iter();
         assert_eq!(itr.next(),Some(false));
         assert_eq!(itr.next(),Some(true));
         assert_eq!(itr.next(),None);
 
-        let flag_ls=blong::from_vec(vec![false,true]);
+        let flag_ls=Blong::from_vec(vec![false,true]);
         let mut itr=flag_ls.iter();
         assert_eq!(itr.next(),Some(false));
         assert_eq!(itr.next(),Some(true));
@@ -474,89 +486,89 @@ mod tests {
     }
     #[test]
     fn from_vec(){
-        let flag_ls=b32::from_vec(vec![false,true]);
+        let flag_ls=B32::from_vec(vec![false,true]);
         assert_eq!(flag_ls.len(),2);
         assert_eq!(flag_ls.get(0),Some(false));
         assert_eq!(flag_ls.get(1),Some(true));
 
-        let flag_ls=b128::from_vec(vec![false,true]);
+        let flag_ls=B128::from_vec(vec![false,true]);
         assert_eq!(flag_ls.len(),2);
         assert_eq!(flag_ls.get(0),Some(false));
         assert_eq!(flag_ls.get(1),Some(true));
 
-        let flag_ls=bsize::from_vec(vec![false,true]);
+        let flag_ls=Bsize::from_vec(vec![false,true]);
         assert_eq!(flag_ls.len(),2);
         assert_eq!(flag_ls.get(0),Some(false));
         assert_eq!(flag_ls.get(1),Some(true));
 
-        let flag_ls=blong::from_vec(vec![false,true]);
+        let flag_ls=Blong::from_vec(vec![false,true]);
         assert_eq!(flag_ls.len(),2);
         assert_eq!(flag_ls.get(0),Some(false));
         assert_eq!(flag_ls.get(1),Some(true));
     }
     #[test]
     fn all_true(){
-        let flag_ls=b32::all_true(10);
+        let flag_ls=B32::all_true(10);
         for flag in flag_ls.iter(){
             assert!(flag);
         }
 
-        let flag_ls=b128::all_true(10);
+        let flag_ls=B128::all_true(10);
         for flag in flag_ls.iter(){
             assert!(flag);
         }
 
-        let flag_ls=bsize::all_true(10);
+        let flag_ls=Bsize::all_true(10);
         for flag in flag_ls.iter(){
             assert!(flag);
         }
 
-        let flag_ls=blong::all_true(10);
+        let flag_ls=Blong::all_true(10);
         for flag in flag_ls.iter(){
             assert!(flag);
         }
     }
     #[test]
     fn all_false(){
-        let flag_ls=b32::all_false(10);
+        let flag_ls=B32::all_false(10);
         for flag in flag_ls.iter(){
             assert!(!flag);
         }
 
-        let flag_ls=b128::all_false(10);
+        let flag_ls=B128::all_false(10);
         for flag in flag_ls.iter(){
             assert!(!flag);
         }
 
-        let flag_ls=bsize::all_false(10);
+        let flag_ls=Bsize::all_false(10);
         for flag in flag_ls.iter(){
             assert!(!flag);
         }
 
-        let flag_ls=blong::all_false(10);
+        let flag_ls=Blong::all_false(10);
         for flag in flag_ls.iter(){
             assert!(!flag);
         }
     }
     #[test]
     fn is_empty(){
-        let l1=b32::default();
-        let l2=b32::all_true(1);
+        let l1=B32::default();
+        let l2=B32::all_true(1);
         assert!(l1.is_empty());
         assert!(!l2.is_empty());
 
-        let l1=b128::default();
-        let l2=b128::all_true(1);
+        let l1=B128::default();
+        let l2=B128::all_true(1);
         assert!(l1.is_empty());
         assert!(!l2.is_empty());
 
-        let l1=bsize::default();
-        let l2=bsize::all_true(1);
+        let l1=Bsize::default();
+        let l2=Bsize::all_true(1);
         assert!(l1.is_empty());
         assert!(!l2.is_empty());
 
-        let l1=blong::default();
-        let l2=blong::all_true(1);
+        let l1=Blong::default();
+        let l2=Blong::all_true(1);
         assert!(l1.is_empty());
         assert!(!l2.is_empty());
     }

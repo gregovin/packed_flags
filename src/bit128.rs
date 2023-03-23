@@ -3,16 +3,15 @@ use std::ops::{Index, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAs
 use crate::{FlagLs, flag_iter::FlagIter};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
-#[allow(non_camel_case_types)]
 /// A list of flags up to 128 flags long, or a 128 bit bitfield
-pub struct b128{
+pub struct B128{
     inner: u128,
     len: usize
 }
-impl b128{
+impl B128{
     fn lower_mask(point: usize)->u128{
         if point>128{
-            panic!("Cannot create mask more than 128 bits for b128")
+            panic!("Cannot create mask more than 128 bits for B128")
         } else {
             (1<<point) -1
         }
@@ -27,14 +26,14 @@ impl b128{
             u128::MAX-(1<<point)+1
         }
     }
-    pub fn new()->b128{
-        b128::default()
+    pub fn new()->B128{
+        B128::default()
     }
-    fn init(inner:u128,len:usize)->b128{
-        b128{inner,len}
+    fn init(inner:u128,len:usize)->B128{
+        B128{inner,len}
     }
 }
-impl Index<usize> for b128{
+impl Index<usize> for B128{
     type Output = bool;
     fn index(&self, index: usize) -> &Self::Output {
         if index>self.len{
@@ -47,7 +46,7 @@ impl Index<usize> for b128{
         }
     }
 }
-impl FlagLs for b128{
+impl FlagLs for B128{
     const MAX_LENGTH: usize=128;
 
     fn len(&self)->usize {
@@ -56,7 +55,7 @@ impl FlagLs for b128{
 
     fn set_len(&mut self, new_len:usize){
         if new_len>Self::MAX_LENGTH{
-            panic!("Cannot set length to a length larger than 128 for b128")
+            panic!("Cannot set length to a length larger than 128 for B128")
         }
         self.len=new_len;
         self.inner &= (1<<new_len) -1;
@@ -93,12 +92,8 @@ impl FlagLs for b128{
         self.len=0;
     }
 
-    fn get(&self, index: usize)->Option<bool> {
-        if index<self.len(){
-            Some(self[index])
-        } else {
-            None
-        }
+    unsafe fn get_unchecked(&self, index: usize)->bool {
+        (self.inner>>index) & 1==1
     }
 
     fn set(&mut self,index:usize,flag:bool) {
@@ -111,74 +106,74 @@ impl FlagLs for b128{
         }
     }
 
-    fn iter(&self)->FlagIter<b128> {
+    fn iter(&self)->FlagIter<B128> {
         FlagIter::new(self)
     }
 
 
 }
-impl BitAnd<b128> for b128{
-    type Output=b128;
+impl BitAnd<B128> for B128{
+    type Output=B128;
 
-    fn bitand(self, rhs: b128) -> Self::Output {
-        b128::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
+    fn bitand(self, rhs: B128) -> Self::Output {
+        B128::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitAndAssign<b128> for b128{
-    fn bitand_assign(&mut self, rhs: b128) {
+impl BitAndAssign<B128> for B128{
+    fn bitand_assign(&mut self, rhs: B128) {
         self.inner&=rhs.inner();
         self.len=self.len.max(rhs.len());
     }
 }
-impl BitOr<b128> for b128{
-    type Output=b128;
-    fn bitor(self, rhs: b128) -> Self::Output {
-        b128::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
+impl BitOr<B128> for B128{
+    type Output=B128;
+    fn bitor(self, rhs: B128) -> Self::Output {
+        B128::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitOrAssign<b128> for b128{
-    fn bitor_assign(&mut self, rhs: b128) {
+impl BitOrAssign<B128> for B128{
+    fn bitor_assign(&mut self, rhs: B128) {
         self.inner|=rhs.inner();
         self.len=self.len.max(rhs.len());
     }
 }
-impl BitXor<b128> for b128{
-    type Output = b128;
-    fn bitxor(self, rhs: b128) -> Self::Output {
-        b128::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
+impl BitXor<B128> for B128{
+    type Output = B128;
+    fn bitxor(self, rhs: B128) -> Self::Output {
+        B128::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
     }
 }
-impl BitXorAssign<b128> for b128{
-    fn bitxor_assign(&mut self, rhs: b128) {
+impl BitXorAssign<B128> for B128{
+    fn bitxor_assign(&mut self, rhs: B128) {
         self.inner.bitxor_assign(rhs.inner());
         self.len=self.len.max(rhs.len());
     }
 }
-impl Shl<usize> for b128{
-    type Output = b128;
+impl Shl<usize> for B128{
+    type Output = B128;
     fn shl(self, rhs: usize) -> Self::Output {
-        b128::init(self.inner<<rhs, (self.len+rhs).min(Self::MAX_LENGTH))
+        B128::init(self.inner<<rhs, (self.len+rhs).min(Self::MAX_LENGTH))
     }
 }
 #[allow(clippy::suspicious_op_assign_impl)]
-impl ShlAssign<usize> for b128{
+impl ShlAssign<usize> for B128{
     fn shl_assign(&mut self, rhs: usize) {
         self.inner.shl_assign(rhs);
         self.len=(self.len+rhs).min(Self::MAX_LENGTH);
     }
 }
-impl Shr<usize> for b128{
-    type Output = b128;
+impl Shr<usize> for B128{
+    type Output = B128;
     fn shr(self, rhs: usize) -> Self::Output {
         let new_len=if self.len>rhs{
             self.len-rhs
         } else {
             0
         };
-        b128::init(self.inner>>rhs, new_len)
+        B128::init(self.inner>>rhs, new_len)
     }
 }
-impl ShrAssign<usize> for b128{
+impl ShrAssign<usize> for B128{
     fn shr_assign(&mut self, rhs: usize) {
         self.inner.shr_assign(rhs);
         self.len = if self.len>rhs{
@@ -188,16 +183,16 @@ impl ShrAssign<usize> for b128{
         };
     }
 }
-impl Not for b128{
-    type Output = b128;
+impl Not for B128{
+    type Output = B128;
     fn not(self) -> Self::Output {
-        b128::init((!self.inner)&Self::lower_mask(self.len) , self.len)
+        B128::init((!self.inner)&Self::lower_mask(self.len) , self.len)
     }
 }
-impl Sub<b128> for b128{
-    type Output = b128;
+impl Sub<B128> for B128{
+    type Output = B128;
     ///note subtraction is set difference
-    fn sub(self, rhs: b128) -> Self::Output {
-        b128::init(self.inner & (!rhs.inner), self.len)
+    fn sub(self, rhs: B128) -> Self::Output {
+        B128::init(self.inner & (!rhs.inner), self.len)
     }
 }
