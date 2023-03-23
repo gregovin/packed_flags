@@ -4,14 +4,14 @@ use crate::{FlagLs, flag_iter::FlagIter};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
 #[allow(non_camel_case_types)]
-/// Up to 32 bit bitfields
+/// A list of flags up to 32 flags long, or a 32 bit bitfield
 pub struct b32{
     inner: u32,
     len: usize
 }
 impl b32{
     fn lower_mask(point: usize)->u32{
-        if point>Self::MAX_LENGTH{
+        if point>32{
             panic!("Cannot create mask more than 32 bits for b32")
         } else {
             (1<<point) -1
@@ -21,9 +21,9 @@ impl b32{
         self.inner
     }
     fn uper_mask(point:usize)->u32{
-        if point>Self::MAX_LENGTH{
+        if point>32{
             panic!("Cannot mask above the end of the list");
-        }  else {
+        } else {
             u32::MAX-(1<<point)+1
         }
     }
@@ -68,8 +68,8 @@ impl FlagLs for b32{
         } else if self.len ==Self::MAX_LENGTH{
             panic!("cannot insert to full list of flags")
         }else {
-            let uper = self.inner * Self::uper_mask(index);
-            let lower = self.inner* Self::lower_mask(index);
+            let uper = self.inner & Self::uper_mask(index);
+            let lower = self.inner & Self::lower_mask(index);
             self.inner=(uper<<1)+((flag as u32)<<index)+lower;
             self.len+=1;
         }
@@ -79,8 +79,8 @@ impl FlagLs for b32{
         if index>=self.len{
             panic!("Cannot remove out of bounds");
         } else {
-            let uper =self.inner *Self::uper_mask(index+1);
-            let lower = self.inner *Self::lower_mask(index);
+            let uper =self.inner & Self::uper_mask(index+1);
+            let lower = self.inner & Self::lower_mask(index);
             let out = (self.inner >>index)&1;
             self.inner=(uper>>1)+lower;
             self.len-=1;
@@ -103,8 +103,8 @@ impl FlagLs for b32{
 
     fn set(&mut self,index:usize,flag:bool) {
         if index<self.len(){
-            let uper = self.inner *Self::uper_mask(index+1);
-            let lower=self.inner* Self::lower_mask(index);
+            let uper = self.inner & Self::uper_mask(index+1);
+            let lower=self.inner & Self::lower_mask(index);
             self.inner=uper+((flag as u32)<<index)+lower;
         } else {
             panic!("Cannot set out of bounds")
@@ -160,7 +160,7 @@ impl Shl<usize> for b32{
         b32::init(self.inner<<rhs, (self.len+rhs).min(Self::MAX_LENGTH))
     }
 }
-#[allow(clippy::suspicious_op_assign_impl)] 
+#[allow(clippy::suspicious_op_assign_impl)]
 impl ShlAssign<usize> for b32{
     fn shl_assign(&mut self, rhs: usize) {
         self.inner.shl_assign(rhs);

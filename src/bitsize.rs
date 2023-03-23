@@ -69,8 +69,8 @@ impl FlagLs for bsize{
         } else if self.len ==Self::MAX_LENGTH{
             panic!("cannot insert to full list of flags")
         }else {
-            let uper = self.inner * Self::uper_mask(index);
-            let lower = self.inner* Self::lower_mask(index);
+            let uper = self.inner & Self::uper_mask(index);
+            let lower = self.inner & Self::lower_mask(index);
             self.inner=(uper<<1)+((flag as usize)<<index)+lower;
             self.len+=1;
         }
@@ -80,8 +80,8 @@ impl FlagLs for bsize{
         if index>=self.len{
             panic!("Cannot remove out of bounds");
         } else {
-            let uper =self.inner *Self::uper_mask(index+1);
-            let lower = self.inner *Self::lower_mask(index);
+            let uper =self.inner & Self::uper_mask(index+1);
+            let lower = self.inner & Self::lower_mask(index);
             let out = (self.inner >>index)&1;
             self.inner=(uper>>1)+lower;
             self.len-=1;
@@ -104,8 +104,8 @@ impl FlagLs for bsize{
 
     fn set(&mut self,index:usize,flag:bool) {
         if index<self.len(){
-            let uper = self.inner *Self::uper_mask(index+1);
-            let lower=self.inner* Self::lower_mask(index);
+            let uper = self.inner & Self::uper_mask(index+1);
+            let lower=self.inner & Self::lower_mask(index);
             self.inner=uper+((flag as usize)<<index)+lower;
         } else {
             panic!("Cannot set out of bounds")

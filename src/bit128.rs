@@ -4,7 +4,7 @@ use crate::{FlagLs, flag_iter::FlagIter};
 
 #[derive(PartialEq,Eq,Default,Clone,Copy, Debug,Hash)]
 #[allow(non_camel_case_types)]
-/// Up to 128 bit bitfields
+/// A list of flags up to 128 flags long, or a 128 bit bitfield
 pub struct b128{
     inner: u128,
     len: usize
@@ -68,8 +68,8 @@ impl FlagLs for b128{
         } else if self.len ==Self::MAX_LENGTH{
             panic!("cannot insert to full list of flags")
         }else {
-            let uper = self.inner * Self::uper_mask(index);
-            let lower = self.inner* Self::lower_mask(index);
+            let uper = self.inner & Self::uper_mask(index);
+            let lower = self.inner & Self::lower_mask(index);
             self.inner=(uper<<1)+((flag as u128)<<index)+lower;
             self.len+=1;
         }
@@ -79,8 +79,8 @@ impl FlagLs for b128{
         if index>=self.len{
             panic!("Cannot remove out of bounds");
         } else {
-            let uper =self.inner *Self::uper_mask(index+1);
-            let lower = self.inner *Self::lower_mask(index);
+            let uper =self.inner & Self::uper_mask(index+1);
+            let lower = self.inner & Self::lower_mask(index);
             let out = (self.inner >>index)&1;
             self.inner=(uper>>1)+lower;
             self.len-=1;
@@ -103,8 +103,8 @@ impl FlagLs for b128{
 
     fn set(&mut self,index:usize,flag:bool) {
         if index<self.len(){
-            let uper = self.inner *Self::uper_mask(index+1);
-            let lower=self.inner* Self::lower_mask(index);
+            let uper = self.inner & Self::uper_mask(index+1);
+            let lower=self.inner & Self::lower_mask(index);
             self.inner=uper+((flag as u128)<<index)+lower;
         } else {
             panic!("Cannot set out of bounds")

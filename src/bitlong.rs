@@ -1,6 +1,9 @@
 use std::ops::{Index, BitAndAssign, BitOrAssign, BitXorAssign, Not, SubAssign};
 
 use crate::{FlagLs, flag_iter::FlagIter};
+/// An arbitrarily long list of flags
+/// 
+/// You should use b32,b64, or b128 instead unless you really need a lot of flags
 #[derive(PartialEq,Eq,Default,Clone, Debug,Hash)]
 #[allow(non_camel_case_types)]
 pub struct blong{
@@ -27,6 +30,7 @@ impl blong{
         }
     }
     #[allow(dead_code)]
+    /// Creates an empty list of flags
     pub fn new()->blong{
         blong { inner: vec![], len: 0 }
     }
@@ -74,22 +78,27 @@ impl FlagLs for blong{
         } else {
             let mut t_index=index/Self::INNER_SIZE;
             let m_index=index%Self::INNER_SIZE;
-            let lower = self.inner[t_index] & Self::lower_mask(m_index);
-            let upper=self.inner[t_index] & Self::uper_mask(m_index);
-            let mut top=self.inner[t_index]>>(Self::INNER_SIZE-1);
-            
-            self.inner[t_index] = (upper<<1)+((flag as usize)<<m_index)+lower;
-            t_index+=1;
-            while t_index<self.inner.len(){
-                let old=top;
-                top=self.inner[t_index]>>(Self::INNER_SIZE-1);
-                self.inner[t_index]=(self.inner[t_index]<<1)+old;
+            if t_index==self.len{
+                self.inner.push(flag as usize);
+                self.len+=1;
+            } else {
+                let lower = self.inner[t_index] & Self::lower_mask(m_index);
+                let upper=self.inner[t_index] & Self::uper_mask(m_index);
+                let mut top=self.inner[t_index]>>(Self::INNER_SIZE-1);
+                
+                self.inner[t_index] = (upper<<1)+((flag as usize)<<m_index)+lower;
                 t_index+=1;
+                while t_index<self.inner.len(){
+                    let old=top;
+                    top=self.inner[t_index]>>(Self::INNER_SIZE-1);
+                    self.inner[t_index]=(self.inner[t_index]<<1)+old;
+                    t_index+=1;
+                }
+                if m_index==Self::INNER_SIZE-1{
+                    self.inner.push(top);
+                }
+                self.len+=1;
             }
-            if m_index==Self::INNER_SIZE-1{
-                self.inner.push(top);
-            }
-            self.len+=1;
         }
     }
 
@@ -108,10 +117,11 @@ impl FlagLs for blong{
                 self.inner[top_idx]=(self.inner[top_idx]>>1)+(old<<(Self::INNER_SIZE-1));
                 top_idx-=1;
             }
-            let upper=self.inner[t_index] &Self::uper_mask(m_indx);
+            let upper=self.inner[t_index] &Self::uper_mask(m_indx+1);
             let lower=self.inner[t_index]&Self::lower_mask(m_indx);
             let out = (self.inner[t_index]>>m_indx)&1;
             self.inner[t_index]=lower+(upper>>1)+(bot<<(Self::INNER_SIZE-1));
+            self.len-=1;
             out==1
         }
     }
