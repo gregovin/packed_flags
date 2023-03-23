@@ -120,6 +120,8 @@ pub trait FlagLs:Sized+ PartialEq+Eq+Default+Clone+Debug+Hash+Index<usize>{
         }
     }
     /// Returns the element at index without performing bounds checking
+    /// 
+    /// For a safe alternative see [get][FlagLs::get]
     /// # Safety
     /// Calling this function with an out of bounds index may result in undefined behavior, or unpredictible/garbage outputs
     unsafe fn get_unchecked(&self,index:usize)->bool;
