@@ -224,10 +224,10 @@ impl From<B32> for Blong{
                 let mut inner: Vec<usize> = vec![];
                 let mut rem_len=len;
                 while rem_len>0{
-                    // If inner representation(as a u128) did not fit in a usize, then usize fits in u128
-                    inner.push((val_inner & u32::try_from(usize::MAX).unwrap_or(0)).try_into().unwrap());
-                    // the number of bits in a usize will always fit into a 128 bit integer forever, so this is fine
-                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
+                    // If inner representation(as a u32) did not fit in a usize, then usize fits in u32
+                    inner.push((val_inner & u32::try_from(usize::MAX).expect("Infalible")).try_into().expect("Infalible"));
+                    // the number of bits in a usize will always fit into a 32 bit integer forever, so this is fine
+                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().expect("Infalible")).unwrap_or(0);
                     rem_len-=Self::INNER_SIZE;
                 }
                 inner
@@ -245,10 +245,10 @@ impl From<B64> for Blong{
                 let mut inner: Vec<usize> = vec![];
                 let mut rem_len=len;
                 while rem_len>0{
-                    // If inner representation(as a u128) did not fit in a usize, then usize fits in u128
-                    inner.push((val_inner & u64::try_from(usize::MAX).unwrap_or(0)).try_into().unwrap());
-                    // the number of bits in a usize will always fit into a 128 bit integer forever, so this is fine
-                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
+                    // If inner representation(as a u64) did not fit in a usize, then usize fits in u64
+                    inner.push((val_inner & u64::try_from(usize::MAX).expect("Infalible")).try_into().expect("Infalible"));
+                    // the number of bits in a usize will always fit into a 32 bit integer forever, so this is fine
+                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().expect("Infalible")).unwrap_or(0);
                     rem_len-=Self::INNER_SIZE;
                 }
                 inner
@@ -267,9 +267,9 @@ impl From<B128> for Blong{
                 let mut rem_len=len;
                 while rem_len>0{
                     // If inner representation(as a u128) did not fit in a usize, then usize fits in u128
-                    inner.push((val_inner & u128::try_from(usize::MAX).unwrap_or(0)).try_into().unwrap());
-                    // the number of bits in a usize will always fit into a 128 bit integer forever, so this is fine
-                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
+                    inner.push((val_inner & u128::try_from(usize::MAX).expect("Infalible")).try_into().expect("Infalible"));
+                    // the number of bits in a usize will always fit into a 32 bit integer forever, so this is fine
+                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().expect("Infalible")).unwrap_or(0);
                     rem_len-=Self::INNER_SIZE;
                 }
                 inner

@@ -3,7 +3,7 @@ use std::ops::{
     Shr, ShrAssign, Sub,
 };
 
-use crate::{flag_iter, Blong, Bsize, FlagLs, B128, B32};
+use crate::{flag_iter, Blong, Bsize, FlagLs, B128, B32, FlagLsError};
 
 #[derive(PartialEq, Eq, Default, Clone, Copy, Debug, Hash)]
 /// A list of flags up to 64 flags long, or a 64 bit bitfield
@@ -198,38 +198,39 @@ impl  From<B32> for B64 {
     }
 }
 impl TryFrom<B128> for B64 {
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: B128) -> Result<Self, Self::Error> {
         let len=value.len();
-        if len<Self::MAX_LENGTH{
-            Err(format!("B64 only accepts flag lists less than 64 bits long, input had {len} bits"))
+        if len>Self::MAX_LENGTH{
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
-            Ok(Self { inner: value.as_inner().try_into().unwrap(), len})
+            Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
         }
     }
 }
 impl TryFrom<Bsize> for B64{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: Bsize) -> Result<Self, Self::Error> {
         let len=value.len();
-        if len<Self::MAX_LENGTH{
-            Err(format!("B64 only accepts flag lists less than 64 bits long, input had {len} bits"))
+        if len>Self::MAX_LENGTH{
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
-            Ok(Self { inner: value.as_inner().try_into().unwrap(), len})
+            Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
         }
     }
 }
 impl TryFrom<Blong> for B64{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: Blong) -> Result<Self, Self::Error> {
         let len=value.len();
-        if len<Self::MAX_LENGTH{
-            Err(format!("B64 only accepts flag lists less than 64 bits long, input had {len} bits"))
+        if len>Self::MAX_LENGTH{
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
             let v_inner=value.as_inner();
             let mut inner=0;
+            // notice that len is <=64, so can, in fact, fit in a u32
             for (i,item) in v_inner.iter().enumerate(){
-                inner+=u64::try_from(*item).unwrap() * (1_u64.checked_shl(usize::BITS * (u32::try_from(i).unwrap())).unwrap_or(0));
+                inner+=u64::try_from(*item).expect("Infalible") * (1_u64.checked_shl(usize::BITS * (u32::try_from(i).expect("Infalible"))).unwrap_or(0));
             }
             Ok(Self { inner , len})
         }

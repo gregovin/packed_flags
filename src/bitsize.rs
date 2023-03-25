@@ -2,7 +2,7 @@ use std::ops::{
     BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Index, Not, Shl, ShlAssign,
     Shr, ShrAssign, Sub,};
 
-use crate::{flag_iter, Blong, FlagLs, B128, B32, B64};
+use crate::{flag_iter, Blong, FlagLs, B128, B32, B64, FlagLsError};
 
 #[derive(PartialEq, Eq, Default, Clone, Copy, Debug, Hash)]
 /// a list of flags/bitfield up to the size of a pointer
@@ -195,41 +195,41 @@ impl Sub<Self> for Bsize {
     }
 }
 impl TryFrom<B32> for Bsize{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: B32) -> Result<Self, Self::Error> {
         let len = value.len();
         match len.cmp(&Self::MAX_LENGTH){
-            std::cmp::Ordering::Greater=> Err(format!("Bsize only accepts flag lists less than {} bits long, input had {} bits",Self::MAX_LENGTH,len)),
-            _=>Ok(Self { inner: value.as_inner().try_into().unwrap(), len })
+            std::cmp::Ordering::Greater=> Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len }),
+            _=>Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len })
         }
     }
 }
 impl TryFrom<B64> for Bsize{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: B64) -> Result<Self, Self::Error> {
         let len = value.len();
         match len.cmp(&Self::MAX_LENGTH){
-            std::cmp::Ordering::Greater=> Err(format!("Bsize only accepts flag lists less than {} bits long, input had {} bits",Self::MAX_LENGTH,len)),
-            _=>Ok(Self { inner: value.as_inner().try_into().unwrap(), len })
+            std::cmp::Ordering::Greater=> Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len }),
+            _=>Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len })
         }
     }
 }
 impl TryFrom<B128> for Bsize{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: B128) -> Result<Self, Self::Error> {
         let len = value.len();
         match len.cmp(&Self::MAX_LENGTH){
-            std::cmp::Ordering::Greater=> Err(format!("Bsize only accepts flag lists less than {} bits long, input had {} bits",Self::MAX_LENGTH,len)),
-            _=>Ok(Self { inner: value.as_inner().try_into().unwrap(), len })
+            std::cmp::Ordering::Greater=> Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len }),
+            _=>Ok(Self { inner: value.as_inner().try_into().expect("Unreachable"), len })
         }
     }
 }
 impl TryFrom<Blong> for Bsize{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: Blong) -> Result<Self, Self::Error> {
         let len = value.len();
         match len.cmp(&Self::MAX_LENGTH){
-            std::cmp::Ordering::Greater=> Err(format!("Bsize only accepts flag lists less than {} bits long, input had {} bits",Self::MAX_LENGTH,len)),
+            std::cmp::Ordering::Greater=> Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len }),
             _=>Ok(Self { inner: *value.as_inner().first().unwrap_or(&0), len })
         }
     }

@@ -211,7 +211,7 @@ impl TryFrom<Bsize> for B128{
             Err(format!("B64 only accepts flag lists less than 64 bits long, input had {len} bits"))
         } else {
             let len=value.len();
-            Ok(Self { inner: value.as_inner().try_into().unwrap(), len})
+            Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
         }
     }
 }
@@ -224,8 +224,10 @@ impl TryFrom<Blong> for B128{
         } else {
             let v_inner=value.as_inner();
             let mut inner=0;
+            //len<128, so i fits in a u32
+            //also inner has to fit in a u128 by above(even if usize::MAX doesn't)
             for (i,item) in v_inner.iter().enumerate(){
-                inner+=u128::try_from(*item).unwrap() * (1_u128.checked_shl(usize::BITS * (u32::try_from(i).unwrap())).unwrap_or(0));
+                inner+=u128::try_from(*item).expect("infalible") * (1_u128.checked_shl(usize::BITS * (u32::try_from(i).expect("Infalible"))).unwrap_or(0));
             }
             Ok(Self { inner , len})
         }

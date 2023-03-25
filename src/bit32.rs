@@ -3,7 +3,7 @@ use std::ops::{
     Shr, ShrAssign, Sub,
 };
 
-use crate::{flag_iter, FlagLs, B64, B128, Bsize, Blong};
+use crate::{flag_iter, FlagLs, B64, B128, Bsize, Blong, FlagLsError};
 
 #[derive(PartialEq, Eq, Default, Clone, Copy, Debug, Hash)]
 /// A list of flags up to 32 flags long, or a 32 bit bitfield
@@ -192,46 +192,46 @@ impl Sub<Self> for B32 {
     }
 }
 impl TryFrom<B64> for B32{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: B64) -> Result<Self, Self::Error> {
         let len=value.len();
         if len<Self::MAX_LENGTH{
-            Err(format!("B32 only accepts flag lists less than 32 bits long, input had {len} bits"))
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
-            Ok(Self { inner: value.as_inner().try_into().unwrap(), len})
+            Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
         }
     }
 }
 impl TryFrom<B128> for B32 {
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: B128) -> Result<Self, Self::Error> {
         let len=value.len();
         if len<Self::MAX_LENGTH{
-            Err(format!("B32 only accepts flag lists less than 32 bits long, input had {len} bits"))
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
-            Ok(Self { inner: value.as_inner().try_into().unwrap(), len})
+            Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
         }
     }
 }
 impl TryFrom<Bsize> for B32{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: Bsize) -> Result<Self, Self::Error> {
         let len=value.len();
         if len<Self::MAX_LENGTH{
-            Err(format!("B32 only accepts flag lists less than 32 bits long, input had {len} bits"))
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
-            Ok(Self { inner: value.as_inner().try_into().unwrap(), len})
+            Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
         }
     }
 }
 impl TryFrom<Blong> for B32{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: Blong) -> Result<Self, Self::Error> {
         let len=value.len();
         if len<Self::MAX_LENGTH{
-            Err(format!("B32 only accepts flag lists less than 32 bits long, input had {len} bits"))
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
-            Ok(Self { inner: (*value.as_inner().first().unwrap_or(&0)).try_into().unwrap(), len})
+            Ok(Self { inner: (*value.as_inner().first().unwrap_or(&0)).try_into().expect("Infalible"), len})
         }
     }
 }
