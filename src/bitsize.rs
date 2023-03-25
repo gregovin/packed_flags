@@ -21,12 +21,12 @@ impl Bsize {
             (1 << point) - 1
         }
     }
-    fn inner(&self) -> usize {
+    const fn inner(&self) -> usize {
         self.inner
     }
     /// Converts the bitfield into its inner representation, a usize, consuming it
     #[must_use]
-    pub fn as_inner(self) -> usize {
+    pub const fn as_inner(self) -> usize {
         self.inner
     }
     fn uper_mask(point: usize) -> usize {
@@ -41,7 +41,7 @@ impl Bsize {
     pub fn new() -> Self {
         Self::default()
     }
-    fn init(inner: usize, len: usize) -> Self {
+    const fn init(inner: usize, len: usize) -> Self {
         Self { inner, len }
     }
 }
@@ -194,10 +194,14 @@ impl Sub<Self> for Bsize {
         Self::init(self.inner & (!rhs.inner), self.len)
     }
 }
-impl From<B32> for Bsize{
-    fn from(value: B32) -> Self{
+impl TryFrom<B32> for Bsize{
+    type Error = String;
+    fn try_from(value: B32) -> Result<Self, Self::Error> {
         let len = value.len();
-        Self { inner: value.as_inner().try_into().unwrap(), len }
+        match len.cmp(&Self::MAX_LENGTH){
+            std::cmp::Ordering::Greater=> Err(format!("Bsize only accepts flag lists less than {} bits long, input had {} bits",Self::MAX_LENGTH,len)),
+            _=>Ok(Self { inner: value.as_inner().try_into().unwrap(), len })
+        }
     }
 }
 impl TryFrom<B64> for Bsize{

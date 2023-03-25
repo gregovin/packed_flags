@@ -19,12 +19,12 @@ impl B128 {
             (1 << point) - 1
         }
     }
-    fn inner(&self) -> u128 {
+    const fn inner(&self) -> u128 {
         self.inner
     }
     #[must_use]
     /// Converts the bitfield into its inner representation, a u128, consuming it
-    pub fn as_inner(self) -> u128 {
+    pub const fn as_inner(self) -> u128 {
         self.inner
     }
     fn uper_mask(point: usize) -> u128 {
@@ -38,7 +38,7 @@ impl B128 {
     pub fn new() -> Self {
         Self::default()
     }
-    fn init(inner: u128, len: usize) -> Self {
+    const fn init(inner: u128, len: usize) -> Self {
         Self { inner, len }
     }
 }
@@ -203,10 +203,16 @@ impl From<B64> for B128{
         Self { inner: value.as_inner().into(), len}
     }
 }
-impl From<Bsize> for B128{
-    fn from(value: Bsize) -> Self {
+impl TryFrom<Bsize> for B128{
+    type Error = String;
+    fn try_from(value: Bsize) -> Result<Self, String> {
         let len=value.len();
-        Self { inner: value.as_inner().try_into().unwrap(), len}
+        if len<Self::MAX_LENGTH{
+            Err(format!("B64 only accepts flag lists less than 64 bits long, input had {len} bits"))
+        } else {
+            let len=value.len();
+            Ok(Self { inner: value.as_inner().try_into().unwrap(), len})
+        }
     }
 }
 impl TryFrom<Blong> for B128{

@@ -19,12 +19,12 @@ impl B32 {
             (1 << point) - 1
         }
     }
-    fn inner(&self) -> u32 {
+    const fn inner(&self) -> u32 {
         self.inner
     }
     #[must_use]
     /// Converts the bitfield into its inner representation, a u32, consuming it
-    pub fn as_inner(self) -> u32 {
+    pub const fn as_inner(self) -> u32 {
         self.inner
     }
     fn uper_mask(point: usize) -> u32 {
@@ -38,7 +38,7 @@ impl B32 {
     pub fn new() -> Self {
         Self::default()
     }
-    fn init(inner: u32, len: usize) -> Self {
+    const fn init(inner: u32, len: usize) -> Self {
         Self { inner, len }
     }
 }

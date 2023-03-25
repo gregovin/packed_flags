@@ -342,19 +342,19 @@ mod tests {
         flag_ls.clear();
         assert_eq!(flag_ls, B128::default());
         flag_ls.set_len(1);
-        assert_eq!(flag_ls[0], false);
+        assert!(!flag_ls[0]);
 
         let mut flag_ls = Bsize::from_vec(vec![false, true, false]);
         flag_ls.clear();
         assert_eq!(flag_ls, Bsize::default());
         flag_ls.set_len(1);
-        assert_eq!(flag_ls[0], false);
+        assert!(!flag_ls[0]);
 
         let mut flag_ls = Blong::from_vec(vec![false, true, false]);
         flag_ls.clear();
         assert_eq!(flag_ls, Blong::default());
         flag_ls.set_len(1);
-        assert_eq!(flag_ls[0], false);
+        assert!(!flag_ls[0]);
     }
     #[test]
     fn push() {

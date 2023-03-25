@@ -9,7 +9,7 @@ where
     T: FlagLs,
 {
     /// Create a new Iterator referencing a flag list
-    pub fn new(ls: &T) -> Iter<T> {
+    pub const fn new(ls: &T) -> Iter<T> {
         Iter { inner: ls, pos: 0 }
     }
 }

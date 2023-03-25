@@ -18,11 +18,12 @@ impl Blong {
             (1 << inner_point) - 1
         }
     }
-    fn inner(&self) -> &Vec<usize> {
+    const fn inner(&self) -> &Vec<usize> {
         &self.inner
     }
     /// Converts the bitfield into its inner representation, a list of integers, consuming it
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn as_inner(self) -> Vec<usize> {
         self.inner
     }
@@ -36,7 +37,7 @@ impl Blong {
     #[allow(dead_code)]
     #[must_use]
     /// Creates an empty list of flags
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             inner: vec![],
             len: 0,
@@ -88,7 +89,6 @@ impl FlagLs for Blong {
             let m_index = index % Self::INNER_SIZE;
             if t_index == self.len {
                 self.inner.push(usize::from(flag));
-                self.len += 1;
             } else {
                 let lower = self.inner[t_index] & Self::lower_mask(m_index);
                 let upper = self.inner[t_index] & Self::uper_mask(m_index);
@@ -105,8 +105,8 @@ impl FlagLs for Blong {
                 if m_index == Self::INNER_SIZE - 1 {
                     self.inner.push(top);
                 }
-                self.len += 1;
             }
+            self.len += 1;
         }
     }
 
@@ -214,38 +214,66 @@ impl SubAssign<&Self> for Blong {
         }
     }
 }
+#[allow(clippy::fallible_impl_from)]
 impl From<B32> for Blong{
     fn from(value: B32) -> Self {
         let len=value.len();
-        let inner = vec![value.as_inner().try_into().unwrap()];
+        let mut val_inner=value.as_inner();
+        let inner:Vec<usize> =usize::try_from(val_inner).map_or_else(|_|
+            {
+                let mut inner: Vec<usize> = vec![];
+                let mut rem_len=len;
+                while rem_len>0{
+                    // If inner representation(as a u128) did not fit in a usize, then usize fits in u128
+                    inner.push((val_inner & u32::try_from(usize::MAX).unwrap_or(0)).try_into().unwrap());
+                    // the number of bits in a usize will always fit into a 128 bit integer forever, so this is fine
+                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
+                    rem_len-=Self::INNER_SIZE;
+                }
+                inner
+            }, |r| vec![r]);
         Self { inner, len}
     }
 }
+#[allow(clippy::fallible_impl_from)]
 impl From<B64> for Blong{
     fn from(value: B64) -> Self {
-        let len = value.len();
-        let mut inner: Vec<usize> = vec![];
-        let mut rem_len=len;
+        let len=value.len();
         let mut val_inner=value.as_inner();
-        while rem_len>0{
-            inner.push((val_inner & u64::try_from(usize::MAX).unwrap()).try_into().unwrap());
-            val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
-            rem_len-=Self::INNER_SIZE;
-        }
+        let inner:Vec<usize> =usize::try_from(val_inner).map_or_else(|_|
+            {
+                let mut inner: Vec<usize> = vec![];
+                let mut rem_len=len;
+                while rem_len>0{
+                    // If inner representation(as a u128) did not fit in a usize, then usize fits in u128
+                    inner.push((val_inner & u64::try_from(usize::MAX).unwrap_or(0)).try_into().unwrap());
+                    // the number of bits in a usize will always fit into a 128 bit integer forever, so this is fine
+                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
+                    rem_len-=Self::INNER_SIZE;
+                }
+                inner
+            }, |r| vec![r]);
         Self { inner, len}
     }
 }
+#[allow(clippy::fallible_impl_from)]
 impl From<B128> for Blong{
     fn from(value: B128) -> Self {
-        let len = value.len();
-        let mut inner: Vec<usize> = vec![];
-        let mut rem_len=len;
+        let len=value.len();
         let mut val_inner=value.as_inner();
-        while rem_len>0{
-            inner.push((val_inner & u128::try_from(usize::MAX).unwrap()).try_into().unwrap());
-            val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
-            rem_len-=Self::INNER_SIZE;
-        }
+        let inner:Vec<usize> =usize::try_from(val_inner).map_or_else(|_|
+            {
+                let mut inner: Vec<usize> = vec![];
+                let mut rem_len=len;
+                while rem_len>0{
+                    // If inner representation(as a u128) did not fit in a usize, then usize fits in u128
+                    inner.push((val_inner & u128::try_from(usize::MAX).unwrap_or(0)).try_into().unwrap());
+                    // the number of bits in a usize will always fit into a 128 bit integer forever, so this is fine
+                    val_inner=val_inner.checked_shr(Self::INNER_SIZE.try_into().unwrap()).unwrap_or(0);
+                    rem_len-=Self::INNER_SIZE;
+                }
+                inner
+            }, |r| vec![r]);
         Self { inner, len}
     }
 }
