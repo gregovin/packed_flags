@@ -35,11 +35,11 @@ impl B64 {
         }
     }
     #[must_use]
-    pub fn new() -> B64 {
-        B64::default()
+    pub fn new() -> Self {
+        Self::default()
     }
-    fn init(inner: u64, len: usize) -> B64 {
-        B64 { inner, len }
+    fn init(inner: u64, len: usize) -> Self {
+        Self { inner, len }
     }
 }
 impl Index<usize> for B64 {
@@ -111,51 +111,51 @@ impl FlagLs for B64 {
         }
     }
 
-    fn iter(&self) -> flag_iter::Iter<B64> {
+    fn iter(&self) -> flag_iter::Iter<Self> {
         flag_iter::Iter::new(self)
     }
 }
-impl BitAnd<B64> for B64 {
-    type Output = B64;
+impl BitAnd<Self> for B64 {
+    type Output = Self;
 
-    fn bitand(self, rhs: B64) -> Self::Output {
-        B64::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitAndAssign<B64> for B64 {
-    fn bitand_assign(&mut self, rhs: B64) {
+impl BitAndAssign<Self> for B64 {
+    fn bitand_assign(&mut self, rhs: Self) {
         self.inner &= rhs.inner();
         self.len = self.len.max(rhs.len());
     }
 }
-impl BitOr<B64> for B64 {
-    type Output = B64;
-    fn bitor(self, rhs: B64) -> Self::Output {
-        B64::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
+impl BitOr<Self> for B64 {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitOrAssign<B64> for B64 {
-    fn bitor_assign(&mut self, rhs: B64) {
+impl BitOrAssign<Self> for B64 {
+    fn bitor_assign(&mut self, rhs: Self) {
         self.inner |= rhs.inner();
         self.len = self.len.max(rhs.len());
     }
 }
-impl BitXor<B64> for B64 {
-    type Output = B64;
-    fn bitxor(self, rhs: B64) -> Self::Output {
-        B64::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
+impl BitXor<Self> for B64 {
+    type Output = Self;
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
     }
 }
-impl BitXorAssign<B64> for B64 {
-    fn bitxor_assign(&mut self, rhs: B64) {
+impl BitXorAssign<Self> for B64 {
+    fn bitxor_assign(&mut self, rhs: Self) {
         self.inner.bitxor_assign(rhs.inner());
         self.len = self.len.max(rhs.len());
     }
 }
 impl Shl<usize> for B64 {
-    type Output = B64;
+    type Output = Self;
     fn shl(self, rhs: usize) -> Self::Output {
-        B64::init(self.inner << rhs, (self.len + rhs).min(Self::MAX_LENGTH))
+        Self::init(self.inner << rhs, (self.len + rhs).min(Self::MAX_LENGTH))
     }
 }
 #[allow(clippy::suspicious_op_assign_impl)]
@@ -166,10 +166,10 @@ impl ShlAssign<usize> for B64 {
     }
 }
 impl Shr<usize> for B64 {
-    type Output = B64;
+    type Output = Self;
     fn shr(self, rhs: usize) -> Self::Output {
         let new_len = if self.len > rhs { self.len - rhs } else { 0 };
-        B64::init(self.inner >> rhs, new_len)
+        Self::init(self.inner >> rhs, new_len)
     }
 }
 impl ShrAssign<usize> for B64 {
@@ -179,16 +179,16 @@ impl ShrAssign<usize> for B64 {
     }
 }
 impl Not for B64 {
-    type Output = B64;
+    type Output = Self;
     fn not(self) -> Self::Output {
-        B64::init((!self.inner) & Self::lower_mask(self.len), self.len)
+        Self::init((!self.inner) & Self::lower_mask(self.len), self.len)
     }
 }
-impl Sub<B64> for B64 {
-    type Output = B64;
+impl Sub<Self> for B64 {
+    type Output = Self;
     ///note subtraction is set difference
-    fn sub(self, rhs: B64) -> Self::Output {
-        B64::init(self.inner & (!rhs.inner), self.len)
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner & (!rhs.inner), self.len)
     }
 }
 impl  From<B32> for B64 {

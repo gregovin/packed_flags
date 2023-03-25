@@ -167,14 +167,11 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// assert_eq!(flag_ls,B64::from_vec(vec![false,true,true]));
     /// assert_eq!(flag_ls.try_set(3,false),None);
     /// ```
-    fn try_set(&mut self, index: usize, flag: bool) -> Option<bool> {
-        match self.get(index) {
-            Some(b) => {
-                self.set(index, flag);
-                Some(b)
-            }
-            None => None,
-        }
+    fn try_set(&mut self, index: usize, _flag: bool) -> Option<bool> {
+        self.get(index).map(|b|{
+            self.set(index,b);
+            b
+        })
     }
     /// get an iterator over all flags in the list
     /// # Examples

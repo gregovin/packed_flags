@@ -36,8 +36,8 @@ impl Blong {
     #[allow(dead_code)]
     #[must_use]
     /// Creates an empty list of flags
-    pub fn new() -> Blong {
-        Blong {
+    pub fn new() -> Self {
+        Self {
             inner: vec![],
             len: 0,
         }
@@ -159,8 +159,8 @@ impl FlagLs for Blong {
         flag_iter::Iter::new(self)
     }
 }
-impl BitAndAssign<&Blong> for Blong {
-    fn bitand_assign(&mut self, rhs: &Blong) {
+impl BitAndAssign<&Self> for Blong {
+    fn bitand_assign(&mut self, rhs: &Self) {
         for i in 0..self.inner.len().min(rhs.inner().len()) {
             self.inner[i].bitand_assign(rhs.inner()[i]);
         }
@@ -173,8 +173,8 @@ impl BitAndAssign<&Blong> for Blong {
         self.len = self.len.max(rhs.len());
     }
 }
-impl BitOrAssign<&Blong> for Blong {
-    fn bitor_assign(&mut self, rhs: &Blong) {
+impl BitOrAssign<&Self> for Blong {
+    fn bitor_assign(&mut self, rhs: &Self) {
         for i in 0..self.inner.len().min(rhs.inner().len()) {
             self.inner[i].bitor_assign(rhs.inner()[i]);
         }
@@ -184,8 +184,8 @@ impl BitOrAssign<&Blong> for Blong {
         self.len = self.len.max(rhs.len());
     }
 }
-impl BitXorAssign<&Blong> for Blong {
-    fn bitxor_assign(&mut self, rhs: &Blong) {
+impl BitXorAssign<&Self> for Blong {
+    fn bitxor_assign(&mut self, rhs: &Self) {
         for i in 0..self.inner.len().min(rhs.inner().len()) {
             self.inner[i].bitand_assign(rhs.inner()[i]);
         }
@@ -196,7 +196,7 @@ impl BitXorAssign<&Blong> for Blong {
     }
 }
 impl Not for Blong {
-    type Output = Blong;
+    type Output = Self;
     fn not(mut self) -> Self::Output {
         let len = self.inner.len();
         for i in 0..len {
@@ -206,9 +206,9 @@ impl Not for Blong {
         self
     }
 }
-impl SubAssign<&Blong> for Blong {
+impl SubAssign<&Self> for Blong {
     /// Subtration is set difference
-    fn sub_assign(&mut self, rhs: &Blong) {
+    fn sub_assign(&mut self, rhs: &Self) {
         for i in 0..self.inner.len() {
             self.inner[i] &= !rhs.inner()[i];
         }

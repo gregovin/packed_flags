@@ -15,7 +15,7 @@ impl Bsize {
         if point > Self::MAX_LENGTH {
             panic!(
                 "Cannot create mask more than {} bits for Bsize",
-                Bsize::MAX_LENGTH
+                Self::MAX_LENGTH
             )
         } else {
             (1 << point) - 1
@@ -38,11 +38,11 @@ impl Bsize {
     }
     /// Create a new blank empty list of flags
     #[must_use]
-    pub fn new() -> Bsize {
-        Bsize::default()
+    pub fn new() -> Self {
+        Self::default()
     }
-    fn init(inner: usize, len: usize) -> Bsize {
-        Bsize { inner, len }
+    fn init(inner: usize, len: usize) -> Self {
+        Self { inner, len }
     }
 }
 impl Index<usize> for Bsize {
@@ -114,51 +114,51 @@ impl FlagLs for Bsize {
         }
     }
 
-    fn iter(&self) -> flag_iter::Iter<Bsize> {
+    fn iter(&self) -> flag_iter::Iter<Self> {
         flag_iter::Iter::new(self)
     }
 }
-impl BitAnd<Bsize> for Bsize {
-    type Output = Bsize;
+impl BitAnd<Self> for Bsize {
+    type Output = Self;
 
-    fn bitand(self, rhs: Bsize) -> Self::Output {
-        Bsize::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitAndAssign<Bsize> for Bsize {
-    fn bitand_assign(&mut self, rhs: Bsize) {
+impl BitAndAssign<Self> for Bsize {
+    fn bitand_assign(&mut self, rhs: Self) {
         self.inner &= rhs.inner();
         self.len = self.len.max(rhs.len());
     }
 }
-impl BitOr<Bsize> for Bsize {
-    type Output = Bsize;
-    fn bitor(self, rhs: Bsize) -> Self::Output {
-        Bsize::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
+impl BitOr<Self> for Bsize {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
     }
 }
-impl BitOrAssign<Bsize> for Bsize {
-    fn bitor_assign(&mut self, rhs: Bsize) {
+impl BitOrAssign<Self> for Bsize {
+    fn bitor_assign(&mut self, rhs: Self) {
         self.inner |= rhs.inner();
         self.len = self.len.max(rhs.len());
     }
 }
-impl BitXor<Bsize> for Bsize {
-    type Output = Bsize;
-    fn bitxor(self, rhs: Bsize) -> Self::Output {
-        Bsize::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
+impl BitXor<Self> for Bsize {
+    type Output = Self;
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
     }
 }
-impl BitXorAssign<Bsize> for Bsize {
-    fn bitxor_assign(&mut self, rhs: Bsize) {
+impl BitXorAssign<Self> for Bsize {
+    fn bitxor_assign(&mut self, rhs: Self) {
         self.inner.bitxor_assign(rhs.inner());
         self.len = self.len.max(rhs.len());
     }
 }
 impl Shl<usize> for Bsize {
-    type Output = Bsize;
+    type Output = Self;
     fn shl(self, rhs: usize) -> Self::Output {
-        Bsize::init(self.inner << rhs, (self.len + rhs).min(Self::MAX_LENGTH))
+        Self::init(self.inner << rhs, (self.len + rhs).min(Self::MAX_LENGTH))
     }
 }
 #[allow(clippy::suspicious_op_assign_impl)]
@@ -169,10 +169,10 @@ impl ShlAssign<usize> for Bsize {
     }
 }
 impl Shr<usize> for Bsize {
-    type Output = Bsize;
+    type Output = Self;
     fn shr(self, rhs: usize) -> Self::Output {
         let new_len = if self.len > rhs { self.len - rhs } else { 0 };
-        Bsize::init(self.inner >> rhs, new_len)
+        Self::init(self.inner >> rhs, new_len)
     }
 }
 impl ShrAssign<usize> for Bsize {
@@ -182,16 +182,16 @@ impl ShrAssign<usize> for Bsize {
     }
 }
 impl Not for Bsize {
-    type Output = Bsize;
+    type Output = Self;
     fn not(self) -> Self::Output {
-        Bsize::init((!self.inner) & Self::lower_mask(self.len), self.len)
+        Self::init((!self.inner) & Self::lower_mask(self.len), self.len)
     }
 }
-impl Sub<Bsize> for Bsize {
-    type Output = Bsize;
+impl Sub<Self> for Bsize {
+    type Output = Self;
     ///note subtraction is set difference
-    fn sub(self, rhs: Bsize) -> Self::Output {
-        Bsize::init(self.inner & (!rhs.inner), self.len)
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::init(self.inner & (!rhs.inner), self.len)
     }
 }
 impl From<B32> for Bsize{
