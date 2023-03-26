@@ -68,7 +68,8 @@ impl FlagLs for Blong {
     }
 
     fn set_len(&mut self, new_len: usize) {
-        let t_len = (new_len / Self::INNER_SIZE) + 1;
+        let (t_len,m_len) = ((new_len+Self::INNER_SIZE-1) / Self::INNER_SIZE,((new_len+Self::INNER_SIZE-1)%Self::INNER_SIZE)+1);
+        println!("t: {t_len}, m: {m_len}");
         match t_len.cmp(&self.inner.len()) {
             std::cmp::Ordering::Greater => {
                 let mut new: Vec<usize> = vec![0; t_len - self.inner.len()];
@@ -78,6 +79,9 @@ impl FlagLs for Blong {
                 let _ = self.inner.drain(t_len..);
             }
             std::cmp::Ordering::Equal => {}
+        }
+        if t_len>0{
+            self.inner[t_len-1] &= (1 << m_len) - 1;
         }
         self.len = new_len;
     }
