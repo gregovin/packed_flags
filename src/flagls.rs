@@ -1,12 +1,9 @@
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::ops::Index;
-
 use crate::{flag_iter, FlagLsError};
 /// A trait that represents a list of flags.
 ///
 /// Mostly the same as things that would be implemented by `Vec<bool>` with a few omisions
-pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Index<usize> 
+/// Types that implement this trait include [`B32`][crate::B32], [`B64`][crate::B64], [`B128`][crate::B128], [`Bsize`][crate::Bsize], and [`Blong`][crate::Blong]
+pub trait FlagLs: Sized+Default
 {
     /// The max length a given flag list can store
     /// # Example
@@ -32,7 +29,7 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     fn len(&self) -> usize;
     /// Sets the length of the flag ls, zeroing any flags removed
     /// # Panics
-    /// Panics if the new length is larger than `MAX_LENGTH`
+    /// Panics if the new length would be larger than `MAX_LENGTH`
     /// # Examples
     /// This can be used to extend the length of a list of flags with false
     /// ```

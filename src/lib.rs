@@ -18,7 +18,7 @@ pub use crate::bitlong::Blong;
 pub use crate::bitsize::Bsize;
 pub use crate::flagls::FlagLs;
 #[derive(Clone,Copy,PartialEq, Eq,Hash,Debug)]
-///Represents errors that can occur for a flag list
+///Represents errors that can occur for a [`FlagLs`]
 pub enum FlagLsError{
     IndexOutOfBounds{idx:usize,len:usize},
     MaximumLengthExceeded{mx_len:usize,attempt_len:usize}

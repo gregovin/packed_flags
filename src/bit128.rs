@@ -3,7 +3,7 @@ use std::{ops::{
     Shr, ShrAssign, Sub,
 }, fmt::{UpperHex, LowerHex, Octal, Binary}};
 
-use crate::{flag_iter, FlagLs, B32, B64, Bsize, Blong};
+use crate::{flag_iter, Blong, Bsize, FlagLs, B64, B32, FlagLsError};
 
 #[derive(PartialEq, Eq, Default, Clone, Copy, Debug, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -24,7 +24,21 @@ impl B128 {
         self.inner
     }
     #[must_use]
-    /// Converts the bitfield into its inner representation, a u128, consuming it
+    /// Converts the bitfield into its integer representation, a u128, consuming it
+    /// # Examples
+    /// The most common use case would be doing bitwise operations with a non-FlagLs item
+    /// Here we bitwisexor the inner state with an arbitrary usze number and then rebuild the flaglist into a result
+    /// ```
+    /// use packed_flags::B128;
+    /// use packed_flags::FlagLs;
+    /// use std::ops::BitXor;
+    /// 
+    /// let bitflags= B128::from_iter(vec![false,true,false,true,false,true,false,true]);
+    /// let other: u128 = 3198; //presumably this other value would come from some external source
+    /// let updated = bitflags.as_inner().bitxor(&other);
+    /// let res = B128::initialize(updated,8);
+    ///
+    /// ```
     pub const fn as_inner(self) -> u128 {
         self.inner
     }
@@ -39,8 +53,17 @@ impl B128 {
     pub fn new() -> Self {
         Self::default()
     }
-    const fn init(inner: u128, len: usize) -> Self {
-        Self { inner, len }
+    #[must_use]
+    /// Create a new `B128` from a `u128` and a length
+    /// 
+    /// Will truncate len to `MAX_LENGTH` and will truncate inner to len bits
+    /// # Examples
+    /// See [`as_inner`][Bsize::as_inner]
+    pub fn initialize(inner: u128, len: usize) -> Self {
+        let len =len.min(Self::MAX_LENGTH);
+        let mut out=Self { inner, len};
+        out.set_len(len);
+        out
     }
 }
 impl Index<usize> for B128 {
@@ -124,7 +147,7 @@ impl BitAnd<Self> for B128 {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
-        Self::init(self.inner() & rhs.inner(), self.len().max(rhs.len()))
+        Self{inner: self.inner() & rhs.inner(),len:self.len().max(rhs.len())}
     }
 }
 impl BitAndAssign<Self> for B128 {
@@ -136,7 +159,7 @@ impl BitAndAssign<Self> for B128 {
 impl BitOr<Self> for B128 {
     type Output = Self;
     fn bitor(self, rhs: Self) -> Self::Output {
-        Self::init(self.inner() | rhs.inner(), self.len().max(rhs.len()))
+        Self{inner: self.inner() | rhs.inner(),len:self.len().max(rhs.len())}
     }
 }
 impl BitOrAssign<Self> for B128 {
@@ -148,7 +171,7 @@ impl BitOrAssign<Self> for B128 {
 impl BitXor<Self> for B128 {
     type Output = Self;
     fn bitxor(self, rhs: Self) -> Self::Output {
-        Self::init(self.inner().bitxor(rhs.inner()), self.len().max(rhs.len()))
+        Self{inner: self.inner().bitxor(rhs.inner()),len:self.len().max(rhs.len())}
     }
 }
 impl BitXorAssign<Self> for B128 {
@@ -160,7 +183,7 @@ impl BitXorAssign<Self> for B128 {
 impl Shl<usize> for B128 {
     type Output = Self;
     fn shl(self, rhs: usize) -> Self::Output {
-        Self::init(self.inner << rhs, (self.len + rhs).min(Self::MAX_LENGTH))
+        Self{inner: self.inner << rhs, len: (self.len + rhs).min(Self::MAX_LENGTH)}
     }
 }
 #[allow(clippy::suspicious_op_assign_impl)]
@@ -174,7 +197,7 @@ impl Shr<usize> for B128 {
     type Output = Self;
     fn shr(self, rhs: usize) -> Self::Output {
         let new_len = if self.len > rhs { self.len - rhs } else { 0 };
-        Self::init(self.inner >> rhs, new_len)
+        Self{inner: self.inner >> rhs, len: new_len}
     }
 }
 impl ShrAssign<usize> for B128 {
@@ -186,53 +209,56 @@ impl ShrAssign<usize> for B128 {
 impl Not for B128 {
     type Output = Self;
     fn not(self) -> Self::Output {
-        Self::init((!self.inner) & Self::lower_mask(self.len), self.len)
+        Self{inner: (!self.inner) & Self::lower_mask(self.len),len: self.len}
     }
 }
+///The `-` operation is set difference.
 impl Sub<Self> for B128 {
     type Output = Self;
-    ///note subtraction is set difference
     fn sub(self, rhs: Self) -> Self::Output {
-        Self::init(self.inner & (!rhs.inner), self.len)
+        Self{inner: self.inner & (!rhs.inner),len: self.len}
     }
 }
-impl From<B32> for B128{
+impl  From<B32> for B128 {
     fn from(value: B32) -> Self {
         let len=value.len();
         Self { inner: value.as_inner().into(), len}
     }
 }
-impl From<B64> for B128{
-    fn from(value: B64) -> Self {
+impl TryFrom<B64> for B128 {
+    type Error = FlagLsError;
+    fn try_from(value: B64) -> Result<Self, Self::Error> {
         let len=value.len();
-        Self { inner: value.as_inner().into(), len}
+        if len>Self::MAX_LENGTH{
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
+        } else {
+            Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
+        }
     }
 }
 impl TryFrom<Bsize> for B128{
-    type Error = String;
-    fn try_from(value: Bsize) -> Result<Self, String> {
+    type Error = FlagLsError;
+    fn try_from(value: Bsize) -> Result<Self, Self::Error> {
         let len=value.len();
-        if len<Self::MAX_LENGTH{
-            Err(format!("B64 only accepts flag lists less than 64 bits long, input had {len} bits"))
+        if len>Self::MAX_LENGTH{
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
-            let len=value.len();
             Ok(Self { inner: value.as_inner().try_into().expect("Infalible"), len})
         }
     }
 }
 impl TryFrom<Blong> for B128{
-    type Error = String;
+    type Error = FlagLsError;
     fn try_from(value: Blong) -> Result<Self, Self::Error> {
         let len=value.len();
-        if len<Self::MAX_LENGTH{
-            Err(format!("B64 only accepts flag lists less than 64 bits long, input had {len} bits"))
+        if len>Self::MAX_LENGTH{
+            Err(FlagLsError::MaximumLengthExceeded { mx_len: Self::MAX_LENGTH, attempt_len: len })
         } else {
             let v_inner=value.as_inner();
             let mut inner=0;
-            //len<128, so i fits in a u32
-            //also inner has to fit in a u128 by above(even if usize::MAX doesn't)
+            // notice that len is <=128, so can, in fact, fit in a u32
             for (i,item) in v_inner.iter().enumerate(){
-                inner+=u128::try_from(*item).expect("infalible") * (1_u128.checked_shl(usize::BITS * (u32::try_from(i).expect("Infalible"))).unwrap_or(0));
+                inner+=u128::try_from(*item).expect("Infalible") * (1_u128.checked_shl(usize::BITS * (u32::try_from(i).expect("Infalible"))).unwrap_or(0));
             }
             Ok(Self { inner , len})
         }
@@ -248,7 +274,7 @@ impl LowerHex for B128{
         write!(f,"{:x}",self.inner)
     }
 }
-impl Octal for B128{
+impl Octal for B128 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f,"{:o}",self.inner)
     }

@@ -22,11 +22,38 @@ impl Blong {
     const fn inner(&self) -> &Vec<usize> {
         &self.inner
     }
-    /// Converts the bitfield into its inner representation, a list of integers, consuming it
+    /// Converts the bitfield into its integer representation, a `Vec<usize>`, consuming it
+    /// 
+    /// The first flag is at the least significant bit of the 0th value of the output
+    /// # Examples
+    /// This would keep the first and third flag, set the rest of the first `usize::BITS` flags to false(0), and then move the new flags into a result
+    /// ```
+    /// use packed_flags::Blong;
+    /// use packed_flags::FlagLs;
+    /// 
+    /// let bitflags= Blong::all_true(100);
+    /// 
+    /// let len=bitflags.len();
+    /// let mut inner=bitflags.as_inner();
+    /// inner[0] &= 5;
+    /// 
+    /// let res =Blong::initialize(inner,len);
+    /// ```
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
     pub fn as_inner(self) -> Vec<usize> {
         self.inner
+    }
+    /// Initializes a `Blong` from a list of integers and a known length
+    /// 
+    /// Any flags beyond the length will be zeroed
+    /// # Examples
+    /// See [`as_inner`][Blong::as_inner]
+    #[must_use]
+    pub fn initialize(inner: Vec<usize>,len:usize)->Self{
+        let mut out =Self{len: inner.len() * Self::INNER_SIZE,inner};
+        out.set_len(len);
+        out
     }
     fn uper_mask(inner_point: usize) -> usize {
         if inner_point > Self::INNER_SIZE {
