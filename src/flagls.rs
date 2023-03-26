@@ -271,7 +271,7 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     fn iter(&self) -> flag_iter::Iter<Self>;
     /// build a compact list of flags from an iterator-like of flags, consuming it
     /// 
-    /// If you are trying to convert an `InitialFlagLs` to a `DesiredFlagLs`, and `DesiredFlagLs` implements `From<InitialFlagLs>` or `TryFrom<InitialFlagLs>` then the assosiated conversion method is preferable
+    /// If you are trying to convert an `InitialFlagLs` to a `DesiredFlagLs`, and `DesiredFlagLs` implements `From<InitialFlagLs>` or `TryFrom<InitialFlagLs>` then the assosiated conversion method is preferable to `DesiredFlags::from_iter(thing.iter())`
     /// # Panics
     /// Panics when v is longer than `MAX_LENGTH`
     /// # Examples
