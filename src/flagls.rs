@@ -34,7 +34,7 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// # Panics
     /// Panics if the new length is larger than `MAX_LENGTH`
     /// # Examples
-    /// This can be used to emulate truncate or to extend the length of a list of flags
+    /// This can be used to extend the length of a list of flags with false
     /// ```
     /// use packed_flags::B64;
     /// use packed_flags::FlagLs;

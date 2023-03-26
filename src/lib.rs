@@ -48,6 +48,36 @@ mod tests {
         assert_eq!(flag_ls4.len(), 3);
     }
     #[test]
+    fn set_len(){
+        let mut flag_ls= B32::all_true(2);
+        flag_ls.set_len(4);
+        assert_eq!(flag_ls,B32::from_iter(vec![true,true,false,false]));
+        flag_ls.set(3,true);
+        flag_ls.set_len(3);
+        assert_eq!(flag_ls,B32::from_iter(vec![true,true,false]));
+
+        let mut flag_ls=B128::all_true(2);
+        flag_ls.set_len(4);
+        assert_eq!(flag_ls,B128::from_iter(vec![true,true,false,false]));
+        flag_ls.set(3,true);
+        flag_ls.set_len(3);
+        assert_eq!(flag_ls,B128::from_iter(vec![true,true,false]));
+
+        let mut flag_ls=Bsize::all_true(2);
+        flag_ls.set_len(4);
+        assert_eq!(flag_ls,Bsize::from_iter(vec![true,true,false,false]));
+        flag_ls.set(3,true);
+        flag_ls.set_len(3);
+        assert_eq!(flag_ls,Bsize::from_iter(vec![true,true,false]));
+
+        let mut flag_ls=Blong::all_true(2);
+        flag_ls.set_len(4);
+        assert_eq!(flag_ls,Blong::from_iter(vec![true,true,false,false]));
+        flag_ls.set(3,true);
+        flag_ls.set_len(3);
+        assert_eq!(flag_ls,Blong::from_iter(vec![true,true,false]));
+    }
+    #[test]
     fn insert() {
         let mut flag_ls1 = B32::default();
         flag_ls1.insert(0, true);
