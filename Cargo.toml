@@ -6,7 +6,7 @@ edition = "2021"
 description = "A package that allows lists of flags to be packed in a somewhat efficient way while still being accessible as a list"
 repository="https://github.com/gregovin/packed_flags"
 license = "MIT OR Apache-2.0"
-keywords=["bitfield","bitflags","flag list","packed"]
+keywords=["bitfield","bitflags","list","flags","packed"]
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
