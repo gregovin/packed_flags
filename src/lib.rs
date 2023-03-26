@@ -1,4 +1,4 @@
-#![warn(clippy::pedantic,clippy::nursery,clippy::unwrap_used)]
+#![warn(clippy::pedantic,clippy::nursery,clippy::unwrap_used,clippy::perf)]
 //!Provides various packed lists of flags(ie equivalent to `Vec<bool>`).
 //!Useful anywhere you are tempted to use `Vec<bool>` or `[bool]`, but want some amount of memory efficiency
 mod bit128;
@@ -8,6 +8,7 @@ mod bitlong;
 mod bitsize;
 mod flagls;
 pub mod flag_iter;
+use std::error::Error;
 use std::fmt::{Display};
 
 pub use crate::bit128::B128;
@@ -22,11 +23,12 @@ pub enum FlagLsError{
     IndexOutOfBounds{idx:usize,len:usize},
     MaximumLengthExceeded{mx_len:usize,attempt_len:usize}
 }
+impl Error for FlagLsError{}
 impl Display for FlagLsError{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self{
-            Self::IndexOutOfBounds { idx, len }=>write!(f, "Attempted to access index {idx} of flag list of length {len}"),
-            Self::MaximumLengthExceeded { mx_len, attempt_len }=>write!(f, "Flag list has maximum length {mx_len}, attempted to increase this to {attempt_len}")
+            Self::IndexOutOfBounds { idx, len }=>write!(f, "attempted to access out of bounds index {idx} of flag list of length {len}"),
+            Self::MaximumLengthExceeded { mx_len, attempt_len }=>write!(f, "flag list has maximum length {mx_len}, attempted to increase this to {attempt_len}")
         }
     }
 }

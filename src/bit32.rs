@@ -1,11 +1,12 @@
-use std::ops::{
+use std::{ops::{
     BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Index, Not, Shl, ShlAssign,
     Shr, ShrAssign, Sub,
-};
+}, fmt::{UpperHex, LowerHex, Octal, Binary}};
 
 use crate::{flag_iter, FlagLs, B64, B128, Bsize, Blong, FlagLsError};
 
 #[derive(PartialEq, Eq, Default, Clone, Copy, Debug, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A list of flags up to 32 flags long, or a 32 bit bitfield
 pub struct B32 {
     inner: u32,
@@ -97,8 +98,12 @@ impl FlagLs for B32 {
         self.len = 0;
     }
 
-    unsafe fn get_unchecked(&self, index: usize) -> bool {
-        (self.inner >> index) & 1 == 1
+    fn get(&self, index: usize) -> Option<bool> {
+        if index<self.len{
+            Some((self.inner >> index) & 1 == 1)   
+        } else {
+            None
+        }
     }
 
     fn set(&mut self, index: usize, flag: bool) {
@@ -233,5 +238,25 @@ impl TryFrom<Blong> for B32{
         } else {
             Ok(Self { inner: (*value.as_inner().first().unwrap_or(&0)).try_into().expect("Infalible"), len})
         }
+    }
+}
+impl UpperHex for B32{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"{:X}",self.inner)
+    }
+}
+impl LowerHex for B32{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"{:x}",self.inner)
+    }
+}
+impl Octal for B32{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"{:o}",self.inner)
+    }
+}
+impl Binary for B32{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"{:b}",self.inner)
     }
 }

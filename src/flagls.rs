@@ -9,6 +9,16 @@ use crate::{flag_iter, FlagLsError};
 pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Index<usize> 
 {
     /// The max length a given flag list can store
+    /// # Example
+    /// ```
+    /// use packed_flags::B64;
+    /// use packed_flags::FlagLs;
+    /// 
+    /// let b=B64::all_false(64);
+    /// 
+    /// assert_eq!(B64::MAX_LENGTH,64);
+    /// assert!(b.len()<=B64::MAX_LENGTH);
+    /// ```
     const MAX_LENGTH: usize;
     /// Returns number of flags in the flags list
     /// # Examples
@@ -23,6 +33,16 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// Sets the length of the flag ls, zeroing any flags removed
     /// # Panics
     /// Panics if the new length is larger than `MAX_LENGTH`
+    /// # Examples
+    /// This can be used to emulate truncate or to extend the length of a list of flags
+    /// ```
+    /// use packed_flags::B64;
+    /// use packed_flags::FlagLs;
+    /// 
+    /// let mut flag_ls=B64::all_true(4);
+    /// flag_ls.set_len(6);
+    /// assert_eq!(flag_ls,B64::from_iter(vec![true,true,true,true,false,false]));
+    /// ```
     fn set_len(&mut self, new_len: usize);
     /// Inserts a new flag at the position given by index(ie so `flag_ls[index]=flag`)
     /// # Panics
@@ -41,15 +61,15 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     fn insert(&mut self, index: usize, flag: bool);
     /// Attempts to insert at index, returning Ok(()) on success
     /// # Errors
-    /// Errors if the index is out of bounds(note idx=self.len() is not considered out of bounds for insert) or if the insert would bring the list above it's maximum length 
+    /// Errors if the index is out of bounds(note idx=self.len() is considered in bounds for insert) or if the insert would bring the list above it's maximum allowed length
     /// # Examples  
     /// ```
     /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     ///
     /// let mut flag_ls=B64::default();
-    /// assert_eq!(flag_ls.insert(0,true),Ok(()));
-    /// assert!(let Err(_)=flag_ls.insert(2,false));
+    /// assert_eq!(flag_ls.try_insert(0,true),Ok(()));
+    /// assert!(flag_ls.try_insert(2,false).is_err());
     /// assert_eq!(flag_ls,B64::from_iter(vec![true]));
     /// ```
     fn try_insert(&mut self,index: usize,flag: bool)->Result<(),FlagLsError>{
@@ -75,6 +95,26 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// assert_eq!(flag_ls,B64::from_iter(vec![false,false]));
     /// ```
     fn remove(&mut self, index: usize) -> bool;
+    /// Returns the specified flag, if it exists
+    /// 
+    /// If the index is out of bounds returns none
+    /// # Examples
+    /// ```
+    /// use packed_flags::B64;
+    /// use packed_flags::FlagLs;
+    ///
+    /// let mut flag_ls=B64::from_iter(vec![false,true,false]);
+    /// assert_eq!(flag_ls.try_remove(1),Some(true));
+    /// assert_eq!(flag_ls.try_remove(2),None);
+    /// assert_eq!(flag_ls,B64::from_iter(vec![false,false]));
+    /// ```
+    fn try_remove(&mut self,index: usize)->Option<bool>{
+        if index<self.len(){
+            Some(self.remove(index))
+        } else {
+            None
+        }
+    }
     /// Clears the list, setting the internal state and length to 0
     /// # Examples
     /// ```
@@ -82,6 +122,7 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// use packed_flags::FlagLs;
     ///
     /// let mut flag_ls=B64::from_iter(vec![false,true,false]);
+    /// 
     /// flag_ls.clear();
     /// assert_eq!(flag_ls,B64::default());
     /// flag_ls.set_len(1);
@@ -89,7 +130,18 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// ```
     fn clear(&mut self);
 
-    /// Truncate the flags to len. Does nothing if `len>self.len`
+    /// Truncate the flags to len. Does nothing if `len>=self.len`
+    /// # Examples
+    /// ```
+    /// use packed_flags::B64;
+    /// use packed_flags::FlagLs;
+    /// 
+    /// let mut flag_ls=B64::from_iter(vec![false,true,false,true]);
+    /// flag_ls.truncate(2);
+    /// assert_eq!(flag_ls,B64::from_iter(vec![false,true]));
+    /// flag_ls.truncate(3);
+    /// assert_eq!(flag_ls,B64::from_iter(vec![false,true]));
+    /// ```
     fn truncate(&mut self, len: usize) {
         if len < self.len() {
             self.set_len(len);
@@ -100,14 +152,25 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// Errors if this would make the flag list larger than `MAX_LENGTH`
     /// # Examples
     /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     ///
     /// let mut flag_ls=B64::default();
-    /// flag_ls.push(false);
-    /// flag_ls.push(true);
-    /// flag_ls.push(false);
+    /// flag_ls.try_push(false)?;
+    /// flag_ls.try_push(true)?;
+    /// flag_ls.try_push(false)?;
     /// assert_eq!(flag_ls,B64::from_iter(vec![false,true,false]));
+    /// 
+    /// use packed_flags::B32;
+    /// 
+    /// let mut flag_ls2= B32::all_true(32);
+    /// assert!(flag_ls2.try_push(false).is_err());
+    /// assert_eq!(flag_ls2,B32::all_true(32));
+    /// # Ok(())
+    /// # }
     /// ```
     fn try_push(&mut self,flag:bool)->Result<(),FlagLsError>{
         if self.len()>=Self::MAX_LENGTH{
@@ -152,14 +215,6 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
             None
         }
     }
-    /// Returns the element at index without performing bounds checking
-    ///
-    /// For a safe alternative see [get][FlagLs::get]
-    /// # Panics
-    /// May panic if index is greater than the `MAX_LENGTH`
-    /// # Safety
-    /// Calling this function with an out of bounds index may result in undefined behavior, or garbage outputs
-    unsafe fn get_unchecked(&self, index: usize) -> bool;
     /// Get the flag at a specified index, if it exists, otherwise returns None
     /// # Examples
     /// ```
@@ -170,13 +225,7 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// assert_eq!(flag_ls.get(1),Some(true));
     /// assert_eq!(flag_ls.get(2),None);
     /// ```
-    fn get(&self, index: usize) -> Option<bool> {
-        if index < self.len() {
-            unsafe { Some(self.get_unchecked(index)) }
-        } else {
-            None
-        }
-    }
+    fn get(&self, index: usize) -> Option<bool>;
     /// Set the flag at a specified index
     /// # Panics
     /// If the index is out of bounds
@@ -246,13 +295,18 @@ pub trait FlagLs: Sized + PartialEq + Eq + Default + Clone + Debug + Hash + Inde
     /// Errors when v is longer than `MAX_LENGTH`
     /// # Examples
     /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use packed_flags::B64;
     /// use packed_flags::FlagLs;
     ///
-    /// let flag_ls=B64::try_from_iter(vec![false,true]);
+    /// let flag_ls=B64::try_from_iter(vec![false,true])?;
     /// assert_eq!(flag_ls.len(),2);
     /// assert_eq!(flag_ls.get(0),Some(false));
     /// assert_eq!(flag_ls.get(1),Some(true));
+    /// # Ok(())
+    /// # }
     /// ```
     fn try_from_iter<I: IntoIterator<Item=bool>>(v: I)->Result<Self,FlagLsError>{
         let mut out = Self::default();

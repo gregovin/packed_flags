@@ -1,10 +1,11 @@
-use std::ops::{BitAndAssign, BitOrAssign, BitXorAssign, Index, Not, SubAssign};
+use std::{ops::{BitAndAssign, BitOrAssign, BitXorAssign, Index, Not, SubAssign}, fmt::{UpperHex, LowerHex, Octal, Binary}};
 
 use crate::{flag_iter, Bsize, FlagLs, B128, B32, B64};
 /// An arbitrarily long list of flags
 ///
 /// You should use b32,b64, or b128 instead unless you really need a lot of flags
 #[derive(PartialEq, Eq, Default, Clone, Debug, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Blong {
     inner: Vec<usize>,
     len: usize,
@@ -139,9 +140,13 @@ impl FlagLs for Blong {
         self.len = 0;
     }
 
-    unsafe fn get_unchecked(&self, index: usize) -> bool {
-        let (t_index, m_index) = (index / Self::INNER_SIZE, index % Self::INNER_SIZE);
-        (self.inner.get_unchecked(t_index) >> m_index) & 1 == 1
+    fn get(&self, index: usize) -> Option<bool> {
+        if index<self.len{
+            let (t_index, m_index) = (index / Self::INNER_SIZE, index % Self::INNER_SIZE);
+            Some((self.inner[t_index] >> m_index) & 1 == 1)
+        } else {
+            None
+        }
     }
 
     fn set(&mut self, index: usize, flag: bool) {
@@ -281,5 +286,42 @@ impl From<Bsize> for Blong{
     fn from(value: Bsize) -> Self {
         let len=value.len();
         Self { inner: vec![value.as_inner()], len}
+    }
+}
+impl UpperHex for Blong{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut out= String::new();
+        for t in &self.inner{
+            out+=&format!("{:X}",*t);
+        }
+        write!(f,"{out}")
+    }
+}
+impl LowerHex for Blong{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut out= String::new();
+        for t in &self.inner{
+            out+=&format!("{:x}",*t);
+        }
+        write!(f,"{out}")
+    }
+}
+impl Octal for Blong{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut out= String::new();
+        for t in &self.inner{
+            out+=&format!("{:o}",*t);
+        }
+        write!(f,"{out}")
+    }
+}
+/// Probably a bad idea to ever use this
+impl Binary for Blong{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut out= String::new();
+        for t in &self.inner{
+            out+=&format!("{:b}",*t);
+        }
+        write!(f,"{out}")
     }
 }
